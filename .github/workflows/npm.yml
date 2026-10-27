@@ -87,7 +87,7 @@ jobs:
         env:
           TGZ: ${{ steps.package.outputs.tgz }}
         run: |
-          npm stage publish "$TGZ" --access public
+          npm stage publish "./$TGZ" --access public
           echo 'Staged: approve it on npmjs.com (Staged Packages) or with npm stage approve.' | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Dry run
