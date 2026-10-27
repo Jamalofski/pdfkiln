@@ -1,0 +1,77 @@
+
+        <!DOCTYPE html>
+        <html style="height: 0;">
+            <head>
+                <base href="http://127.0.0.1:8765?debug=0"/>
+                <link type="text/css" rel="stylesheet" href="/web/assets/414e890/web.report_assets_pdf.min.css"/>
+                <link type="text/css" rel="stylesheet" href="/web/assets/47d1c25/web.report_assets_common.min.css"/>
+                
+                <meta charset="utf-8"/>
+                <script>
+                    function subst() {
+                        var vars = {};
+                        var x = document.location.search.substring(1).split('&');
+                        for (var i in x) {
+                            var z = x[i].split('=', 2);
+                            vars[z[0]] = unescape(z[1]);
+                        }
+                        var x = ['sitepage', 'sitepages', 'section', 'subsection', 'subsubsection'];
+                        var z = {'sitepage': 'page', 'sitepages': 'topage'};
+                        for (var i in x) {
+                            var y = document.getElementsByClassName(z[x[i]] || x[i])
+                            for (var j=0; j<y.length; ++j)
+                                y[j].textContent = vars[x[i]];
+                        }
+
+                        var index = vars['webpage'].split('.', 4)[3];
+                        var header = document.getElementById('minimal_layout_report_headers');
+                        if(header){
+                            var companyHeader = header.children[index];
+                            header.textContent = '';
+                            header.appendChild(companyHeader);
+                        }
+                        var footer = document.getElementById('minimal_layout_report_footers');
+                        if(footer){
+                            var companyFooter = footer.children[index];
+                            footer.textContent = '';
+                            footer.appendChild(companyFooter);
+                        }
+                    }
+                </script>
+            </head>
+            <body class="container" style="overflow:hidden" onload="subst()" dir="ltr">
+                <div id="minimal_layout_report_footers"><div class="footer o_clean_footer o_company_1_layout">
+            <div class="row">
+                <div class="col-4">
+                    
+                </div>
+                <div class="col-4">
+                    <span>
+    <address class="o_portal_address mb-0" itemscope="itemscope" itemtype="http://schema.org/Organization">
+    <div>
+            <span itemprop="name">My Company (San Francisco)</span>
+    </div>
+        <div class="gap-2" itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
+            <div class="d-flex align-items-baseline gap-1">
+                <span class="d-block w-100 lh-sm" itemprop="streetAddress">250 Executive Park Blvd, Suite 3400<br>San Francisco CA 94134<br>United States</span>
+            </div>
+            
+            <div itemprop="telephone"></div>
+        </div>
+    </address></span>
+                </div>
+                <div class="col-3">
+                </div>
+                <div class="col-1">
+                    <ul class="list-inline pagenumber float-end text-center">
+                        <li class="list-inline-item"><strong><span class="page"></span></strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+         
+        
+                    </div>
+            </body>
+        </html>

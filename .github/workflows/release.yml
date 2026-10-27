@@ -1,0 +1,147 @@
+name: release
+run-name: "Release from ci ${{ inputs.ci_run }} and arm64 ${{ inputs.arm64_run }}${{ inputs.confirm != 'release' && ', dry run' || '' }}"
+
+# A version's GitHub release: the packages of two green runs on main,
+# ci.yml (Linux x64, macOS ARM64, Windows x64) and arm64.yml (Linux
+# ARM64), as CI built and tested them, never rebuilt (scripts/release.ts). Run by hand only. CI keeps packages
+# two days: start both runs on main first, then this one with their ids.
+#
+#   gh workflow run release.yml -f ci_run=<id> -f arm64_run=<id>                     dry run
+#   gh workflow run release.yml -f ci_run=<id> -f arm64_run=<id> -f confirm=release
+#
+# A dry run checks and assembles the files, writes the notes in the run's
+# summary, and stops. With "release" typed in, the release is created as a
+# draft: publishing it, which creates the tag, stays a click of the
+# maintainer's (draft=false publishes at once). The other channels, from the
+# same runs, each by hand: apt.yml (APT repository), npm.yml, docker.yml.
+#
+# Provenance: the jobs that build the packages attest them once the
+# repository is public (GitHub attests in a private one only with
+# Enterprise Cloud); each file's attestation is then checked here.
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run:
+        description: Run of the ci workflow on main
+        required: true
+      arm64_run:
+        description: Run of the arm64 workflow on the same commit
+        required: true
+      confirm:
+        description: Type "release" to create the release (otherwise, a dry run)
+        required: false
+        default: ''
+      draft:
+        description: Create the release as a draft
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+      attestations: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CI_RUN: ${{ inputs.ci_run }}
+      ARM64_RUN: ${{ inputs.arm64_run }}
+    steps:
+      # Both green, on main, on one commit: the release's.
+      - name: The two runs
+        id: runs
+        run: |
+          view() {
+            [[ "$1" =~ ^[0-9]+$ ]] || return 1
+            gh run view "$1" --repo "$GITHUB_REPOSITORY" --json workflowName,headBranch,conclusion,headSha \
+              --jq '[.workflowName, .headBranch, .conclusion, .headSha] | join(" ")'
+          }
+          read -r ci_name ci_branch ci_conclusion ci_sha <<< "$(view "$CI_RUN")"
+          read -r arm_name arm_branch arm_conclusion arm_sha <<< "$(view "$ARM64_RUN")"
+          echo "ci $CI_RUN: $ci_name, $ci_branch, $ci_conclusion, $ci_sha"
+          echo "arm64 $ARM64_RUN: $arm_name, $arm_branch, $arm_conclusion, $arm_sha"
+          [ "$ci_name $ci_branch $ci_conclusion" = 'ci main success' ] || { echo "::error::$CI_RUN is not a green run of ci on main"; exit 1; }
+          [ "$arm_name $arm_branch $arm_conclusion" = 'arm64 main success' ] || { echo "::error::$ARM64_RUN is not a green run of arm64 on main"; exit 1; }
+          [ "$ci_sha" = "$arm_sha" ] || { echo "::error::the two runs built different commits"; exit 1; }
+          echo "sha=$ci_sha" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.runs.outputs.sha }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      # Neither a release, draft included, nor a tag for this version yet.
+      - name: Version
+        id: version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if gh release view "v$version" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "::error::v$version already has a release"; exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+            echo "::error::the tag v$version exists"; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # A folder per artifact: each one holds the npm package, under the
+      # same name, and gh run download overwrites nothing.
+      - name: Packages of the two runs
+        run: |
+          for name in package-ubuntu-24.04 package-windows-2025 package-macos-15; do
+            gh run download "$CI_RUN" --repo "$GITHUB_REPOSITORY" --name "$name" --dir "from/$name"
+          done
+          gh run download "$ARM64_RUN" --repo "$GITHUB_REPOSITORY" --name package-linux-arm64 --dir from/package-linux-arm64
+          ls -lR from
+
+      - name: Files, checked against CI's sums, and notes
+        env:
+          SHA: ${{ steps.runs.outputs.sha }}
+          PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          attested=
+          [ "$PRIVATE" = false ] && attested=--attested
+          node dist/scripts/release.js --from from --out release --notes notes.md \
+            --repo "$GITHUB_REPOSITORY" --commit "$SHA" --ci-run "$CI_RUN" --arm64-run "$ARM64_RUN" $attested
+          cat release/SHA256SUMS
+          cat notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Provenance of each file (public repository)
+        if: ${{ !github.event.repository.private }}
+        run: |
+          for f in release/*; do
+            [ "$f" = release/SHA256SUMS ] && continue
+            gh attestation verify "$f" --repo "$GITHUB_REPOSITORY"
+          done
+
+      - name: Release
+        if: inputs.confirm == 'release'
+        env:
+          SHA: ${{ steps.runs.outputs.sha }}
+          VERSION: ${{ steps.version.outputs.version }}
+          DRAFT: ${{ inputs.draft }}
+        run: |
+          draft=()
+          [ "$DRAFT" = true ] && draft=(--draft)
+          gh release create "v$VERSION" release/* --repo "$GITHUB_REPOSITORY" --target "$SHA" \
+            --title "pdfkiln $VERSION" --notes-file notes.md "${draft[@]}"
+
+      - name: Dry run
+        if: inputs.confirm != 'release'
+        run: |
+          echo 'Dry run, nothing created: type "release" in confirm to create the release.' | tee -a "$GITHUB_STEP_SUMMARY"

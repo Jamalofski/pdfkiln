@@ -1,0 +1,737 @@
+{
+ "source": "wkhtmltopdf 0.12.6 (tag 0.12.6, commit 6a57c14), src/pdf/pdfarguments.cc and src/shared/commonarguments.cc: name, short switch, section and argument count of each addarg call",
+ "options": [
+  {
+   "name": "help",
+   "short": "h",
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "version",
+   "short": "V",
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "license",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "extended-help",
+   "short": "H",
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "manpage",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "htmldoc",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "readme",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "quiet",
+   "short": "q",
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "log-level",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "no-collate",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "collate",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "copies",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "orientation",
+   "short": "O",
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "page-size",
+   "short": "s",
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "grayscale",
+   "short": "g",
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "lowquality",
+   "short": "l",
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "title",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "read-args-from-stdin",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "margin-bottom",
+   "short": "B",
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "margin-left",
+   "short": "L",
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "margin-right",
+   "short": "R",
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "margin-top",
+   "short": "T",
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "dpi",
+   "short": "d",
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "page-height",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "page-width",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "cookie-jar",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "image-quality",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "image-dpi",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "no-pdf-compression",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "use-xserver",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "outline",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "no-outline",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "outline-depth",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "dump-outline",
+   "short": null,
+   "mode": "global",
+   "argn": 1
+  },
+  {
+   "name": "dump-default-toc-xsl",
+   "short": null,
+   "mode": "global",
+   "argn": 0
+  },
+  {
+   "name": "default-header",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "viewport-size",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "enable-plugins",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "disable-plugins",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "minimum-font-size",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "user-style-sheet",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "no-images",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "images",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "disable-javascript",
+   "short": "n",
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "enable-javascript",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "encoding",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "no-background",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "background",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "include-in-outline",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "exclude-from-outline",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "disable-smart-shrinking",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "enable-smart-shrinking",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "print-media-type",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "no-print-media-type",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "enable-forms",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "disable-forms",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "disable-internal-links",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "enable-internal-links",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "disable-external-links",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "enable-external-links",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "resolve-relative-links",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "keep-relative-links",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "enable-toc-back-links",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "disable-toc-back-links",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "proxy",
+   "short": "p",
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "proxy-hostname-lookup",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "bypass-proxy-for",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "username",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "password",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "ssl-key-path",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "ssl-key-password",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "ssl-crt-path",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "load-error-handling",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "load-media-error-handling",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "custom-header",
+   "short": null,
+   "mode": "page",
+   "argn": 2
+  },
+  {
+   "name": "custom-header-propagation",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "no-custom-header-propagation",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "javascript-delay",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "window-status",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "zoom",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "cookie",
+   "short": null,
+   "mode": "page",
+   "argn": 2
+  },
+  {
+   "name": "post",
+   "short": null,
+   "mode": "page",
+   "argn": 2
+  },
+  {
+   "name": "post-file",
+   "short": null,
+   "mode": "page",
+   "argn": 2
+  },
+  {
+   "name": "disable-local-file-access",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "enable-local-file-access",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "allow",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "cache-dir",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "debug-javascript",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "no-debug-javascript",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "stop-slow-scripts",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "no-stop-slow-scripts",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "run-script",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "checkbox-svg",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "checkbox-checked-svg",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "radiobutton-svg",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "radiobutton-checked-svg",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "page-offset",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "footer-center",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "footer-font-name",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "footer-font-size",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "footer-left",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "footer-line",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "no-footer-line",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "footer-right",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "footer-spacing",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "footer-html",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "header-center",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "header-font-name",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "header-font-size",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "header-left",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "header-line",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "no-header-line",
+   "short": null,
+   "mode": "page",
+   "argn": 0
+  },
+  {
+   "name": "header-right",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "header-spacing",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "header-html",
+   "short": null,
+   "mode": "page",
+   "argn": 1
+  },
+  {
+   "name": "replace",
+   "short": null,
+   "mode": "page",
+   "argn": 2
+  },
+  {
+   "name": "xsl-style-sheet",
+   "short": null,
+   "mode": "toc",
+   "argn": 1
+  },
+  {
+   "name": "toc-header-text",
+   "short": null,
+   "mode": "toc",
+   "argn": 1
+  },
+  {
+   "name": "disable-toc-links",
+   "short": null,
+   "mode": "toc",
+   "argn": 0
+  },
+  {
+   "name": "disable-dotted-lines",
+   "short": null,
+   "mode": "toc",
+   "argn": 0
+  },
+  {
+   "name": "toc-text-size-shrink",
+   "short": null,
+   "mode": "toc",
+   "argn": 1
+  },
+  {
+   "name": "toc-level-indentation",
+   "short": null,
+   "mode": "toc",
+   "argn": 1
+  }
+ ]
+}

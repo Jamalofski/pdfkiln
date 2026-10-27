@@ -1,0 +1,11 @@
+{
+  "id": "sylius-credit-memo",
+  "title": "Sylius RefundPlugin credit memo (English), 3 lines",
+  "app": "Sylius RefundPlugin (commit 0ca6789a), through knp-snappy",
+  "license": "MIT",
+  "source": "https://github.com/Sylius/RefundPlugin/blob/main/templates/download/credit_memo.html.twig",
+  "versioned": true,
+  "args": ["--lowquality", "--allow", "input/sylius-logo.png", "input/knp_snappy_credit_memo.html", "{out}"],
+  "stdin": null,
+  "notes": "Rendered with Twig 3.30 by ../sylius-invoice/render.php, with made-up refund data. Same command line shape as sylius-invoice."
+}

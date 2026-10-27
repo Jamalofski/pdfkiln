@@ -1,0 +1,23 @@
+{
+  "version": "0.12.6",
+  "source": "https://github.com/wkhtmltopdf/packaging/releases/tag/0.12.6-1",
+  "packages": {
+    "linux-x64": {
+      "url": "https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.focal_amd64.deb",
+      "sha256": "ad0264869fe40ccfb91c32e9be7318bfabf3864f6a8a15567f7a38afe4a9a932",
+      "binary": "usr/local/bin/wkhtmltopdf",
+      "note": "Ubuntu 20.04 build; runs on newer Ubuntu with the libssl1.1 below on LD_LIBRARY_PATH"
+    },
+    "linux-x64-libssl1.1": {
+      "url": "http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb",
+      "sha256": "7cf39d70a639017d1dd7c8d36daa2258063608688e449fddf40ffdd46f992a78",
+      "libdir": "usr/lib/x86_64-linux-gnu"
+    },
+    "win-x64": {
+      "url": "https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.msvc2015-win64.exe",
+      "sha256": "1efcfaf8472871268fd399865a3e62b435b91d4413009b80830eaaff7a57d088",
+      "binary": "bin/wkhtmltopdf.exe",
+      "note": "Official NSIS installer, unpacked with 7-Zip instead of being installed"
+    }
+  }
+}

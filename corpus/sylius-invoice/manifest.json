@@ -1,0 +1,11 @@
+{
+  "id": "sylius-invoice",
+  "title": "Sylius InvoicingPlugin invoice (French), 10 lines",
+  "app": "Sylius InvoicingPlugin 2.3 (commit 2049602a), through knp-snappy",
+  "license": "MIT",
+  "source": "https://github.com/Sylius/InvoicingPlugin/blob/2.3/templates/shared/download/pdf.html.twig",
+  "versioned": true,
+  "args": ["--lowquality", "--allow", "input/sylius-logo.png", "input/knp_snappy_invoice.html", "{out}"],
+  "stdin": null,
+  "notes": "Rendered with Twig 3.30 by render.php from the plugin's templates and translations, with made-up order data. knp-snappy writes the HTML to a temporary file and always passes --lowquality; the plugin allows the logo file with --allow. The logo path is relative here, absolute in the plugin."
+}

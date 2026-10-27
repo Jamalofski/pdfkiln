@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+
+<html dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hôtel-Restaurant Le Cèdre</title>
+<meta content="frappe" name="generator"/>
+<link href="http://127.0.0.1:8765/assets/frappe/dist/css/print.bundle.7DKZWKDD.css" rel="stylesheet" type="text/css"/>
+<style>
+		@media screen {
+	.print-format-gutter {
+		background-color: #d1d8dd;
+		padding: 30px 0px;
+	}
+	.print-format {
+		background-color: white;
+		border-radius: 8px;
+		max-width: 8.3in;
+		min-height: 11.69in;
+		padding: 0.75in;
+		margin: auto;
+		color: var(--gray-900);
+	}
+
+	.print-format.landscape {
+		max-width: 11.69in;
+		padding: 0.2in;
+	}
+
+	.page-break {
+		/* padding: 15px 0px; */
+		border-bottom: 1px dashed #888;
+	}
+
+	/* .page-break:first-child {
+		padding-top: 0px;
+	} */
+
+	.page-break:last-child {
+		border-bottom: 0px;
+	}
+
+	/* mozilla hack for images in table */
+	body:last-child .print-format td img {
+		width: 100% !important;
+	}
+
+	@media(max-width: 767px) {
+		.print-format {
+			padding: 0.2in;
+		}
+	}
+}
+
+@media print {
+	.print-format p {
+		margin-left: 1px;
+		margin-right: 1px;
+	}
+}
+
+.disabled-check {
+	color: #eee;
+}
+
+.data-field {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.data-field .value {
+	word-wrap: break-word;
+}
+
+.important .value {
+	font-size: 120%;
+	font-weight: bold;
+}
+
+.important label {
+	line-height: 1.8;
+	margin: 0px;
+}
+
+.table {
+	font-size: inherit;
+	margin: 20px 0px;
+}
+
+.checkbox-options {
+	columns: var(--checkbox-options-columns);
+}
+
+.square-image {
+	width: 100%;
+	height: 0;
+	padding: 50% 0;
+	background-size: contain;
+	/*background-size: cover;*/
+	background-repeat: no-repeat !important;
+	background-position: center center;
+	border-radius: 4px;
+}
+
+.print-item-image {
+	object-fit: contain;
+}
+
+.pdf-variables,
+.pdf-variable,
+.visible-pdf {
+	display: none !important;
+}
+
+.print-format {
+	font-size: 9pt;
+	font-family: Inter, "Helvetica Neue", Helvetica, Arial, "Open Sans", sans-serif;
+	-webkit-print-color-adjust:exact;
+}
+
+.page-break {
+	page-break-after: always;
+}
+
+.print-heading {
+	border-bottom: 1px solid #aaa;
+	margin-bottom: 10px;
+}
+
+.print-heading h2 {
+	margin: 0px;
+}
+.print-heading h4 {
+	margin-top: 5px;
+}
+
+table.no-border, table.no-border td {
+	border: 0px;
+}
+
+.print-format label {
+	/* wkhtmltopdf breaks label into multiple lines when it is inline-block */
+	display: block;
+	font-weight: 700;
+}
+
+.print-format img {
+	max-width: 100%;
+}
+
+.print-format table td > .primary:first-child {
+	font-weight: bold;
+}
+
+.print-format td, .print-format th {
+	vertical-align: top !important;
+	padding: 6px !important;
+}
+
+.print-format p {
+	margin: 3px 0px 3px;
+}
+
+.print-format table td pre {
+	white-space: normal;
+	word-break: normal;
+}
+
+table td div {
+	
+	/* needed to avoid partial cutting of text between page break in wkhtmltopdf */
+	page-break-inside: avoid !important;
+	
+}
+
+/* hack for webkit specific browser */
+@media (-webkit-min-device-pixel-ratio:0) {
+	thead, tfoot {
+		display: table-header-group;
+	}
+}
+
+[document-status] {
+	margin-bottom: 5mm;
+}
+
+.signature-img {
+	background: #fff;
+	border-radius: 3px;
+	margin-top: 5px;
+	max-height: 150px;
+}
+
+.print-format-preview [data-fieldtype="Table"] {
+	overflow: auto;
+}
+.print-format {
+    font-size: 13px;
+    background: white;
+}
+
+.print-heading {
+    border-bottom: 1px solid #f4f5f6;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.print-heading h2 {
+    font-size: 24px;
+}
+
+.print-heading h2 div {
+    font-weight: 600;
+}
+
+.print-heading small {
+    font-size: 13px !important;
+    font-weight: normal;
+    line-height: 2.5;
+    color: #4c5a67;
+}
+
+.print-format .letter-head {
+    margin-bottom: 30px;
+}
+
+.print-format label {
+    font-weight: normal;
+    font-size: 13px;
+    color: #4C5A67;
+    margin-bottom: 0;
+}
+
+.print-format .data-field {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.print-format .value {
+    color: #192734;
+    line-height: 1.8;
+}
+
+.print-format .section-break:not(:last-child) {
+    margin-bottom: 0;
+}
+
+.print-format .row:not(.section-break) {
+    line-height: 1.6;
+    margin-top: 15px !important;
+}
+
+.print-format .important .value {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.print-format th {
+    color: #74808b;
+    font-weight: normal;
+    border-bottom-width: 1px !important;
+}
+
+.print-format .table-bordered td, .print-format .table-bordered th {
+    border: 1px solid #f4f5f6;
+}
+
+.print-format .table-bordered {
+    border: 1px solid #f4f5f6;
+}
+
+.print-format td, .print-format th {
+    padding: 10px !important;
+}
+
+.print-format .primary.compact-item {
+    font-weight: normal;
+}
+
+.print-format table td .value {
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+		</style>
+</head>
+<body>
+<div class="action-banner print-hide">
+<a class="p-2" onclick="window.print();">
+			Print
+		</a>
+<a class="p-2" href="http://127.0.0.1:8765/api/method/frappe.utils.print_format.download_pdf?doctype=Delivery Note&amp;name=MAT-DN-2026-00001&amp;format=Standard&amp;letterhead=No Letterhead&amp;no_letterhead=True&amp;_lang=en&amp;key=None">
+			Get PDF
+		</a>
+</div>
+<div class="print-format-gutter">
+<div class="print-format">
+<div class="page-break">
+<div class="row section-break" data-label="">
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="tax_id" data-fieldtype="Data">
+<div class="col-xs-12">
+<label>Tax Id: </label>
+</div>
+<div class="col-xs-12 value">
+					FR08 450987654
+	
+				</div>
+</div>
+<div class="row important data-field" data-fieldname="customer_name" data-fieldtype="Data">
+<div class="col-xs-12">
+<label>Customer Name: </label>
+</div>
+<div class="col-xs-12 value">
+					Hôtel-Restaurant Le Cèdre
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="posting_date" data-fieldtype="Date">
+<div class="col-xs-12">
+<label>Date: </label>
+</div>
+<div class="col-xs-12 value">
+					23/10/2026
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-12 column-break">
+<div data-fieldname="items" data-fieldtype="Table">
+<table class="table table-bordered table-condensed">
+<thead>
+<tr>
+<th class="table-sr" style="width: 40px">Sr</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 300px;">
+							Description</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 100px;">
+							Quantity</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 150px;">
+							Rate</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 100px;">
+							Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="table-sr">1</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<div>
+<div class="primary compact-item">
+			CER-ASS-27
+		</div>
+<p></p><div class="ql-snow">Assiette plate 27 cm, émail céladon</div><p></p>
+<p>
+<strong>UOM:</strong>
+				Nos
+			</p>
+<p>
+<strong>Rate of Stock UOM:</strong>
+				€ 24,50
+			</p>
+<p>
+<strong>Grant Commission:</strong>
+				1
+			</p>
+<p>
+<strong>Use Serial No / Batch Fields:</strong>
+				1
+			</p>
+</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	60
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 24,50
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 1 470,00
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">2</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<div>
+<div class="primary compact-item">
+			CER-ASS-21
+		</div>
+<p></p><div class="ql-snow">Assiette plate 21 cm, émail céladon</div><p></p>
+<p>
+<strong>UOM:</strong>
+				Nos
+			</p>
+<p>
+<strong>Rate of Stock UOM:</strong>
+				€ 18,00
+			</p>
+<p>
+<strong>Grant Commission:</strong>
+				1
+			</p>
+<p>
+<strong>Use Serial No / Batch Fields:</strong>
+				1
+			</p>
+</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	60
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 18,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 1 080,00
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">3</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<div>
+<div class="primary compact-item">
+			CER-ASC-23
+		</div>
+<p></p><div class="ql-snow">Assiette creuse 23 cm, émail sable</div><p></p>
+<p>
+<strong>UOM:</strong>
+				Nos
+			</p>
+<p>
+<strong>Rate of Stock UOM:</strong>
+				€ 21,00
+			</p>
+<p>
+<strong>Grant Commission:</strong>
+				1
+			</p>
+<p>
+<strong>Use Serial No / Batch Fields:</strong>
+				1
+			</p>
+</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	40
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 21,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 840,00
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">4</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<div>
+<div class="primary compact-item">
+			CER-TAS-25
+		</div>
+<p></p><div class="ql-snow">Tasse à expresso 8 cl avec soucoupe</div><p></p>
+<p>
+<strong>UOM:</strong>
+				Nos
+			</p>
+<p>
+<strong>Rate of Stock UOM:</strong>
+				€ 12,80
+			</p>
+<p>
+<strong>Grant Commission:</strong>
+				1
+			</p>
+<p>
+<strong>Use Serial No / Batch Fields:</strong>
+				1
+			</p>
+</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	80
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 12,80
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 1 024,00
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">5</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<div>
+<div class="primary compact-item">
+			CER-PLT-40
+		</div>
+<p></p><div class="ql-snow">Plat de service ovale 40 cm</div><p></p>
+<p>
+<strong>UOM:</strong>
+				Nos
+			</p>
+<p>
+<strong>Rate of Stock UOM:</strong>
+				€ 48,00
+			</p>
+<p>
+<strong>Grant Commission:</strong>
+				1
+			</p>
+<p>
+<strong>Use Serial No / Batch Fields:</strong>
+				1
+			</p>
+</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	12
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 48,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 576,00
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">6</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<div>
+<div class="primary compact-item">
+			CER-RAM-09
+		</div>
+<p></p><div class="ql-snow">Ramequin 9 cm, crème brûlée</div><p></p>
+<p>
+<strong>UOM:</strong>
+				Nos
+			</p>
+<p>
+<strong>Rate of Stock UOM:</strong>
+				€ 7,20
+			</p>
+<p>
+<strong>Grant Commission:</strong>
+				1
+			</p>
+<p>
+<strong>Use Serial No / Batch Fields:</strong>
+				1
+			</p>
+</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	120
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 7,20
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 864,00
+	</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="total_qty" data-fieldtype="Float">
+<div class="col-xs-12">
+<label>Total Quantity: </label>
+</div>
+<div class="col-xs-12 value">
+					372
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+</div>
+<div class="col-xs-4 column-break">
+<div class="row data-field">
+<div class="col-xs-5">
+<label>Total</label></div>
+<div class="col-xs-7 text-right value">
+			€ 5 854,00
+		</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-12 column-break">
+<div class="row">
+<div class="col-xs-6"></div>
+<div class="col-xs-6"><div class="row">
+<div class="col-xs-5">
+<label>TVA 20 %</label>
+</div>
+<div class="col-xs-7 text-right">
+					€ 1 170,80
+				</div>
+</div></div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Totals">
+<div class="col-xs-6 column-break">
+</div>
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="grand_total" data-fieldtype="Currency">
+<div class="col-xs-5">
+<label>Grand Total: </label>
+</div>
+<div class="col-xs-7 text-right value">
+					
+		€ 7 024,80
+	
+				</div>
+</div>
+<div class="row important data-field" data-fieldname="rounded_total" data-fieldtype="Currency">
+<div class="col-xs-5">
+<label>Rounded Total: </label>
+</div>
+<div class="col-xs-7 text-right value">
+					
+		€ 7 024,80
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="in_words" data-fieldtype="Data">
+<div class="col-xs-5">
+<label>In Words: </label>
+</div>
+<div class="col-xs-7 value">
+					EUR Seven Thousand And Twenty Four and Eighty Cent only.
+	
+				</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Billing Address">
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="address_display" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>Billing Address: </label>
+</div>
+<div class="col-xs-7 value">
+					3 place du Marché<br/>
+Annecy<br/>
+74000<br/>France<br/>
+<br/>
+</div>
+</div>
+</div>
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="contact_display" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>Contact: </label>
+</div>
+<div class="col-xs-7 value">
+					Thomas Girard
+	
+				</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Shipping Address">
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="shipping_address" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>Shipping Address: </label>
+</div>
+<div class="col-xs-7 value">
+					3 place du Marché<br/>
+Annecy<br/>
+74000<br/>France<br/>
+<br/>
+</div>
+</div>
+</div>
+<div class="col-xs-6 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="Company Address">
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="company_address" data-fieldtype="Link">
+<div class="col-xs-5">
+<label>Company Address Name: </label>
+</div>
+<div class="col-xs-7 value">
+					Atelier Kiln SARL-Billing
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="company_address_display" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>Company Address: </label>
+</div>
+<div class="col-xs-7 value">
+					12 rue des Potiers<br/>
+Lyon<br/>
+69002<br/>France<br/>
+<br/>
+Phone: +33 4 72 10 20 30<br/>Email: contact@atelier-kiln.example<br/>
+</div>
+</div>
+</div>
+<div class="col-xs-6 column-break">
+<div data-fieldname="terms" data-fieldtype="Text Editor" style="padding: 10px 0px"><div class="ql-snow"><p>Paiement à 30 jours fin de mois par virement bancaire. Pas d'escompte pour paiement anticipé. Les pièces sont réalisées à la main : de légères variations de teinte et de dimensions sont normales et ne constituent pas un défaut. Toute réclamation doit être formulée par écrit dans les 8 jours suivant la réception de la marchandise.</p></div></div>
+</div>
+</div>
+<div class="row section-break" data-label="Commission">
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="amount_eligible_for_commission" data-fieldtype="Currency">
+<div class="col-xs-5">
+<label>Amount Eligible for Commission: </label>
+</div>
+<div class="col-xs-7 text-right value">
+					
+		€ 5 854,00
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-6 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="Additional Info">
+<div class="col-xs-6 column-break">
+</div>
+<div class="col-xs-6 column-break">
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const page_div = document.querySelector('.page-break');
+
+			if (page_div) {
+				page_div.style.display = 'flex';
+				page_div.style.flexDirection = 'column';
+			}
+
+			const footer_html = document.getElementById('footer-html');
+			if (footer_html)  {
+				footer_html.classList.add('hidden-pdf');
+				footer_html.classList.remove('visible-pdf');
+				footer_html.style.order = 1;
+				footer_html.style.marginTop = '20px';
+			}
+		});
+	</script>
+</body><!-- Administrator --></html>

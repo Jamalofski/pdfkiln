@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Node.js v24 — path</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Node.js v24 — path</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#path" id="toc-path">Path</a>
+<ul>
+<li><a href="#windows-vs.-posix" id="toc-windows-vs.-posix">Windows
+vs. POSIX</a></li>
+<li><a href="#path.basenamepath-suffix"
+id="toc-path.basenamepath-suffix"><code>path.basename(path[, suffix])</code></a></li>
+<li><a href="#path.delimiter"
+id="toc-path.delimiter"><code>path.delimiter</code></a></li>
+<li><a href="#path.dirnamepath"
+id="toc-path.dirnamepath"><code>path.dirname(path)</code></a></li>
+<li><a href="#path.extnamepath"
+id="toc-path.extnamepath"><code>path.extname(path)</code></a></li>
+<li><a href="#path.formatpathobject"
+id="toc-path.formatpathobject"><code>path.format(pathObject)</code></a></li>
+<li><a href="#path.matchesglobpath-pattern"
+id="toc-path.matchesglobpath-pattern"><code>path.matchesGlob(path, pattern)</code></a></li>
+<li><a href="#path.isabsolutepath"
+id="toc-path.isabsolutepath"><code>path.isAbsolute(path)</code></a></li>
+<li><a href="#path.join...paths"
+id="toc-path.join...paths"><code>path.join([...paths])</code></a></li>
+<li><a href="#path.normalizepath"
+id="toc-path.normalizepath"><code>path.normalize(path)</code></a></li>
+<li><a href="#path.parsepath"
+id="toc-path.parsepath"><code>path.parse(path)</code></a></li>
+<li><a href="#path.posix"
+id="toc-path.posix"><code>path.posix</code></a></li>
+<li><a href="#path.relativefrom-to"
+id="toc-path.relativefrom-to"><code>path.relative(from, to)</code></a></li>
+<li><a href="#path.resolve...paths"
+id="toc-path.resolve...paths"><code>path.resolve([...paths])</code></a></li>
+<li><a href="#path.sep" id="toc-path.sep"><code>path.sep</code></a></li>
+<li><a href="#path.tonamespacedpathpath"
+id="toc-path.tonamespacedpathpath"><code>path.toNamespacedPath(path)</code></a></li>
+<li><a href="#path.win32"
+id="toc-path.win32"><code>path.win32</code></a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="path">Path</h1>
+<!--introduced_in=v0.10.0-->
+<blockquote>
+<p>Stability: 2 - Stable</p>
+</blockquote>
+<!-- source_link=lib/path.js -->
+<p>The <code>node:path</code> module provides utilities for working with
+file and directory paths. It can be accessed using:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode cjs"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> path <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;node:path&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode mjs"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> path <span class="im">from</span> <span class="st">&#39;node:path&#39;</span><span class="op">;</span></span></code></pre></div>
+<h2 id="windows-vs.-posix">Windows vs. POSIX</h2>
+<p>The default operation of the <code>node:path</code> module varies
+based on the operating system on which a Node.js application is running.
+Specifically, when running on a Windows operating system, the
+<code>node:path</code> module will assume that Windows-style paths are
+being used.</p>
+<p>So using <code>path.basename()</code> might yield different results
+on POSIX and Windows:</p>
+<p>On POSIX:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">basename</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">temp</span><span class="sc">\\</span><span class="st">myfile.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;C:\\temp\\myfile.html&#39;</span></span></code></pre></div>
+<p>On Windows:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">basename</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">temp</span><span class="sc">\\</span><span class="st">myfile.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;myfile.html&#39;</span></span></code></pre></div>
+<p>To achieve consistent results when working with Windows file paths on
+any operating system, use <a
+href="#pathwin32"><code>path.win32</code></a>:</p>
+<p>On POSIX and Windows:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="at">win32</span><span class="op">.</span><span class="fu">basename</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">temp</span><span class="sc">\\</span><span class="st">myfile.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;myfile.html&#39;</span></span></code></pre></div>
+<p>To achieve consistent results when working with POSIX file paths on
+any operating system, use <a
+href="#pathposix"><code>path.posix</code></a>:</p>
+<p>On POSIX and Windows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="at">posix</span><span class="op">.</span><span class="fu">basename</span>(<span class="st">&#39;/tmp/myfile.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;myfile.html&#39;</span></span></code></pre></div>
+<p>On Windows Node.js follows the concept of per-drive working
+directory. This behavior can be observed when using a drive path without
+a backslash. For example, <code>path.resolve('C:\\')</code> can
+potentially return a different result than
+<code>path.resolve('C:')</code>. For more information, see <a
+href="https://docs.microsoft.com/en-us/windows/desktop/FileIO/naming-a-file#fully-qualified-vs-relative-paths">this
+MSDN page</a>.</p>
+<h2
+id="path.basenamepath-suffix"><code>path.basename(path[, suffix])</code></h2>
+<!-- YAML
+added: v0.1.25
+changes:
+  - version: v6.0.0
+    pr-url: https://github.com/nodejs/node/pull/5348
+    description: Passing a non-string as the `path` argument will throw now.
+-->
+<ul>
+<li><code>path</code> {string}</li>
+<li><code>suffix</code> {string} An optional suffix to remove</li>
+<li>Returns: {string}</li>
+</ul>
+<p>The <code>path.basename()</code> method returns the last portion of a
+<code>path</code>, similar to the Unix <code>basename</code> command.
+Trailing <a href="#pathsep">directory separators</a> are ignored.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">basename</span>(<span class="st">&#39;/foo/bar/baz/asdf/quux.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;quux.html&#39;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">basename</span>(<span class="st">&#39;/foo/bar/baz/asdf/quux.html&#39;</span><span class="op">,</span> <span class="st">&#39;.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;quux&#39;</span></span></code></pre></div>
+<p>Although Windows usually treats file names, including file
+extensions, in a case-insensitive manner, this function does not. For
+example, <code>C:\\foo.html</code> and <code>C:\\foo.HTML</code> refer
+to the same file, but <code>basename</code> treats the extension as a
+case-sensitive string:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="at">win32</span><span class="op">.</span><span class="fu">basename</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">foo.html&#39;</span><span class="op">,</span> <span class="st">&#39;.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;foo&#39;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="at">win32</span><span class="op">.</span><span class="fu">basename</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">foo.HTML&#39;</span><span class="op">,</span> <span class="st">&#39;.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;foo.HTML&#39;</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if <code>path</code> is not a string or if <code>suffix</code> is
+given and is not a string.</p>
+<h2 id="path.delimiter"><code>path.delimiter</code></h2>
+<!-- YAML
+added: v0.9.3
+-->
+<ul>
+<li>Type: {string}</li>
+</ul>
+<p>Provides the platform-specific path delimiter:</p>
+<ul>
+<li><code>;</code> for Windows</li>
+<li><code>:</code> for POSIX</li>
+</ul>
+<p>For example, on POSIX:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">PATH</span>)<span class="op">;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Prints: &#39;/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin&#39;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">PATH</span><span class="op">.</span><span class="fu">split</span>(path<span class="op">.</span><span class="at">delimiter</span>)<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: [&#39;/usr/bin&#39;, &#39;/bin&#39;, &#39;/usr/sbin&#39;, &#39;/sbin&#39;, &#39;/usr/local/bin&#39;]</span></span></code></pre></div>
+<p>On Windows:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">PATH</span>)<span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Prints: &#39;C:\Windows\system32;C:\Windows;C:\Program Files\node\&#39;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="bu">process</span><span class="op">.</span><span class="at">env</span><span class="op">.</span><span class="at">PATH</span><span class="op">.</span><span class="fu">split</span>(path<span class="op">.</span><span class="at">delimiter</span>)<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns [&#39;C:\\Windows\\system32&#39;, &#39;C:\\Windows&#39;, &#39;C:\\Program Files\\node\\&#39;]</span></span></code></pre></div>
+<h2 id="path.dirnamepath"><code>path.dirname(path)</code></h2>
+<!-- YAML
+added: v0.1.16
+changes:
+  - version: v6.0.0
+    pr-url: https://github.com/nodejs/node/pull/5348
+    description: Passing a non-string as the `path` argument will throw now.
+-->
+<ul>
+<li><code>path</code> {string}</li>
+<li>Returns: {string}</li>
+</ul>
+<p>The <code>path.dirname()</code> method returns the directory name of
+a <code>path</code>, similar to the Unix <code>dirname</code> command.
+Trailing directory separators are ignored, see <a
+href="#pathsep"><code>path.sep</code></a>.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">dirname</span>(<span class="st">&#39;/foo/bar/baz/asdf/quux&#39;</span>)<span class="op">;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/foo/bar/baz/asdf&#39;</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if <code>path</code> is not a string.</p>
+<h2 id="path.extnamepath"><code>path.extname(path)</code></h2>
+<!-- YAML
+added: v0.1.25
+changes:
+  - version: v6.0.0
+    pr-url: https://github.com/nodejs/node/pull/5348
+    description: Passing a non-string as the `path` argument will throw now.
+-->
+<ul>
+<li><code>path</code> {string}</li>
+<li>Returns: {string}</li>
+</ul>
+<p>The <code>path.extname()</code> method returns the extension of the
+<code>path</code>, from the last occurrence of the <code>.</code>
+(period) character to end of string in the last portion of the
+<code>path</code>. If there is no <code>.</code> in the last portion of
+the <code>path</code>, or if there are no <code>.</code> characters
+other than the first character of the basename of <code>path</code> (see
+<code>path.basename()</code>) , an empty string is returned.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">extname</span>(<span class="st">&#39;index.html&#39;</span>)<span class="op">;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;.html&#39;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">extname</span>(<span class="st">&#39;index.coffee.md&#39;</span>)<span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;.md&#39;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">extname</span>(<span class="st">&#39;index.&#39;</span>)<span class="op">;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;.&#39;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">extname</span>(<span class="st">&#39;index&#39;</span>)<span class="op">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;&#39;</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">extname</span>(<span class="st">&#39;.index&#39;</span>)<span class="op">;</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;&#39;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">extname</span>(<span class="st">&#39;.index.md&#39;</span>)<span class="op">;</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;.md&#39;</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if <code>path</code> is not a string.</p>
+<h2 id="path.formatpathobject"><code>path.format(pathObject)</code></h2>
+<!-- YAML
+added: v0.11.15
+changes:
+  - version: v19.0.0
+    pr-url: https://github.com/nodejs/node/pull/44349
+    description: The dot will be added if it is not specified in `ext`.
+-->
+<ul>
+<li><code>pathObject</code> {Object} Any JavaScript object having the
+following properties:
+<ul>
+<li><code>dir</code> {string}</li>
+<li><code>root</code> {string}</li>
+<li><code>base</code> {string}</li>
+<li><code>name</code> {string}</li>
+<li><code>ext</code> {string}</li>
+</ul></li>
+<li>Returns: {string}</li>
+</ul>
+<p>The <code>path.format()</code> method returns a path string from an
+object. This is the opposite of <a
+href="#pathparsepath"><code>path.parse()</code></a>.</p>
+<p>When providing properties to the <code>pathObject</code> remember
+that there are combinations where one property has priority over
+another:</p>
+<ul>
+<li><code>pathObject.root</code> is ignored if
+<code>pathObject.dir</code> is provided</li>
+<li><code>pathObject.ext</code> and <code>pathObject.name</code> are
+ignored if <code>pathObject.base</code> exists</li>
+</ul>
+<p>For example, on POSIX:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// If `dir`, `root` and `base` are provided,</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">// `${dir}${path.sep}${base}`</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">// will be returned. `root` is ignored.</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">format</span>({</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">root</span><span class="op">:</span> <span class="st">&#39;/ignored&#39;</span><span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">dir</span><span class="op">:</span> <span class="st">&#39;/home/user/dir&#39;</span><span class="op">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">base</span><span class="op">:</span> <span class="st">&#39;file.txt&#39;</span><span class="op">,</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/home/user/dir/file.txt&#39;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co">// `root` will be used if `dir` is not specified.</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="co">// If only `root` is provided or `dir` is equal to `root` then the</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co">// platform separator will not be included. `ext` will be ignored.</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">format</span>({</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">root</span><span class="op">:</span> <span class="st">&#39;/&#39;</span><span class="op">,</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">base</span><span class="op">:</span> <span class="st">&#39;file.txt&#39;</span><span class="op">,</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">ext</span><span class="op">:</span> <span class="st">&#39;ignored&#39;</span><span class="op">,</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/file.txt&#39;</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="co">// `name` + `ext` will be used if `base` is not specified.</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">format</span>({</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">root</span><span class="op">:</span> <span class="st">&#39;/&#39;</span><span class="op">,</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;file&#39;</span><span class="op">,</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="dt">ext</span><span class="op">:</span> <span class="st">&#39;.txt&#39;</span><span class="op">,</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/file.txt&#39;</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="co">// The dot will be added if it is not specified in `ext`.</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">format</span>({</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>  <span class="dt">root</span><span class="op">:</span> <span class="st">&#39;/&#39;</span><span class="op">,</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;file&#39;</span><span class="op">,</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">ext</span><span class="op">:</span> <span class="st">&#39;txt&#39;</span><span class="op">,</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/file.txt&#39;</span></span></code></pre></div>
+<p>On Windows:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">format</span>({</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">dir</span><span class="op">:</span> <span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">path</span><span class="sc">\\</span><span class="st">dir&#39;</span><span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">base</span><span class="op">:</span> <span class="st">&#39;file.txt&#39;</span><span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;C:\\path\\dir\\file.txt&#39;</span></span></code></pre></div>
+<h2
+id="path.matchesglobpath-pattern"><code>path.matchesGlob(path, pattern)</code></h2>
+<!-- YAML
+added:
+  - v22.5.0
+  - v20.17.0
+changes:
+  - version: v24.8.0
+    pr-url: https://github.com/nodejs/node/pull/59572
+    description: Marking the API stable.
+-->
+<ul>
+<li><code>path</code> {string} The path to glob-match against.</li>
+<li><code>pattern</code> {string} The glob to check the path
+against.</li>
+<li>Returns: {boolean} Whether or not the <code>path</code> matched the
+<code>pattern</code>.</li>
+</ul>
+<p>The <code>path.matchesGlob()</code> method determines if
+<code>path</code> matches the <code>pattern</code>.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">matchesGlob</span>(<span class="st">&#39;/foo/bar&#39;</span><span class="op">,</span> <span class="st">&#39;/foo/*&#39;</span>)<span class="op">;</span> <span class="co">// true</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">matchesGlob</span>(<span class="st">&#39;/foo/bar*&#39;</span><span class="op">,</span> <span class="st">&#39;foo/bird&#39;</span>)<span class="op">;</span> <span class="co">// false</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if <code>path</code> or <code>pattern</code> are not strings.</p>
+<h2 id="path.isabsolutepath"><code>path.isAbsolute(path)</code></h2>
+<!-- YAML
+added: v0.11.2
+-->
+<ul>
+<li><code>path</code> {string}</li>
+<li>Returns: {boolean}</li>
+</ul>
+<p>The <code>path.isAbsolute()</code> method determines if the literal
+<code>path</code> is absolute. Therefore, it’s not safe for mitigating
+path traversals.</p>
+<p>If the given <code>path</code> is a zero-length string,
+<code>false</code> will be returned.</p>
+<p>For example, on POSIX:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;/foo/bar&#39;</span>)<span class="op">;</span>   <span class="co">// true</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;/baz/..&#39;</span>)<span class="op">;</span>    <span class="co">// true</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;/baz/../..&#39;</span>)<span class="op">;</span> <span class="co">// true</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;qux/&#39;</span>)<span class="op">;</span>       <span class="co">// false</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;.&#39;</span>)<span class="op">;</span>          <span class="co">// false</span></span></code></pre></div>
+<p>On Windows:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;//server&#39;</span>)<span class="op">;</span>    <span class="co">// true</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;</span><span class="sc">\\\\</span><span class="st">server&#39;</span>)<span class="op">;</span>  <span class="co">// true</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;C:/foo/..&#39;</span>)<span class="op">;</span>   <span class="co">// true</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">foo</span><span class="sc">\\</span><span class="st">..&#39;</span>)<span class="op">;</span> <span class="co">// true</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;bar</span><span class="sc">\\</span><span class="st">baz&#39;</span>)<span class="op">;</span>    <span class="co">// false</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;bar/baz&#39;</span>)<span class="op">;</span>     <span class="co">// false</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">isAbsolute</span>(<span class="st">&#39;.&#39;</span>)<span class="op">;</span>           <span class="co">// false</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if <code>path</code> is not a string.</p>
+<h2 id="path.join...paths"><code>path.join([...paths])</code></h2>
+<!-- YAML
+added: v0.1.16
+-->
+<ul>
+<li><code>...paths</code> {string} A sequence of path segments</li>
+<li>Returns: {string}</li>
+</ul>
+<p>The <code>path.join()</code> method joins all given <code>path</code>
+segments together using the platform-specific separator as a delimiter,
+then normalizes the resulting path.</p>
+<p>Zero-length <code>path</code> segments are ignored. If the joined
+path string is a zero-length string then <code>'.'</code> will be
+returned, representing the current working directory.</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;/foo&#39;</span><span class="op">,</span> <span class="st">&#39;bar&#39;</span><span class="op">,</span> <span class="st">&#39;baz/asdf&#39;</span><span class="op">,</span> <span class="st">&#39;quux&#39;</span><span class="op">,</span> <span class="st">&#39;..&#39;</span>)<span class="op">;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/foo/bar/baz/asdf&#39;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;foo&#39;</span><span class="op">,</span> {}<span class="op">,</span> <span class="st">&#39;bar&#39;</span>)<span class="op">;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Throws &#39;TypeError: Path must be a string. Received {}&#39;</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if any of the path segments is not a string.</p>
+<h2 id="path.normalizepath"><code>path.normalize(path)</code></h2>
+<!-- YAML
+added: v0.1.23
+-->
+<ul>
+<li><code>path</code> {string}</li>
+<li>Returns: {string}</li>
+</ul>
+<p>The <code>path.normalize()</code> method normalizes the given
+<code>path</code>, resolving <code>'..'</code> and <code>'.'</code>
+segments.</p>
+<p>When multiple, sequential path segment separation characters are
+found (e.g. <code>/</code> on POSIX and either <code>\</code> or
+<code>/</code> on Windows), they are replaced by a single instance of
+the platform-specific path segment separator (<code>/</code> on POSIX
+and <code>\</code> on Windows). Trailing separators are preserved.</p>
+<p>If the <code>path</code> is a zero-length string, <code>'.'</code> is
+returned, representing the current working directory.</p>
+<p>On POSIX, the types of normalization applied by this function do not
+strictly adhere to the POSIX specification. For example, this function
+will replace two leading forward slashes with a single slash as if it
+was a regular absolute path, whereas a few POSIX systems assign special
+meaning to paths beginning with exactly two forward slashes. Similarly,
+other substitutions performed by this function, such as removing
+<code>..</code> segments, may change how the underlying system resolves
+the path.</p>
+<p>For example, on POSIX:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">normalize</span>(<span class="st">&#39;/foo/bar//baz/asdf/quux/..&#39;</span>)<span class="op">;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/foo/bar/baz/asdf&#39;</span></span></code></pre></div>
+<p>On Windows:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">normalize</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">temp</span><span class="sc">\\\\</span><span class="st">foo</span><span class="sc">\\</span><span class="st">bar</span><span class="sc">\\</span><span class="st">..</span><span class="sc">\\</span><span class="st">&#39;</span>)<span class="op">;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;C:\\temp\\foo\\&#39;</span></span></code></pre></div>
+<p>Since Windows recognizes multiple path separators, both separators
+will be replaced by instances of the Windows preferred separator
+(<code>\</code>):</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="at">win32</span><span class="op">.</span><span class="fu">normalize</span>(<span class="st">&#39;C:////temp</span><span class="sc">\\\\</span><span class="st">/</span><span class="sc">\\</span><span class="st">/</span><span class="sc">\\</span><span class="st">/foo/bar&#39;</span>)<span class="op">;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;C:\\temp\\foo\\bar&#39;</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if <code>path</code> is not a string.</p>
+<h2 id="path.parsepath"><code>path.parse(path)</code></h2>
+<!-- YAML
+added: v0.11.15
+-->
+<ul>
+<li><code>path</code> {string}</li>
+<li>Returns: {Object}</li>
+</ul>
+<p>The <code>path.parse()</code> method returns an object whose
+properties represent significant elements of the <code>path</code>.
+Trailing directory separators are ignored, see <a
+href="#pathsep"><code>path.sep</code></a>.</p>
+<p>The returned object will have the following properties:</p>
+<ul>
+<li><code>dir</code> {string}</li>
+<li><code>root</code> {string}</li>
+<li><code>base</code> {string}</li>
+<li><code>name</code> {string}</li>
+<li><code>ext</code> {string}</li>
+</ul>
+<p>For example, on POSIX:</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">parse</span>(<span class="st">&#39;/home/user/dir/file.txt&#39;</span>)<span class="op">;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns:</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co">// { root: &#39;/&#39;,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co">//   dir: &#39;/home/user/dir&#39;,</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   base: &#39;file.txt&#39;,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   ext: &#39;.txt&#39;,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co">//   name: &#39;file&#39; }</span></span></code></pre></div>
+<pre class="text"><code>┌─────────────────────┬────────────┐
+│          dir        │    base    │
+├──────┬              ├──────┬─────┤
+│ root │              │ name │ ext │
+&quot;  /    home/user/dir / file  .txt &quot;
+└──────┴──────────────┴──────┴─────┘
+(All spaces in the &quot;&quot; line should be ignored. They are purely for formatting.)</code></pre>
+<p>On Windows:</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">parse</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">path</span><span class="sc">\\</span><span class="st">dir</span><span class="sc">\\</span><span class="st">file.txt&#39;</span>)<span class="op">;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns:</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co">// { root: &#39;C:\\&#39;,</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co">//   dir: &#39;C:\\path\\dir&#39;,</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   base: &#39;file.txt&#39;,</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   ext: &#39;.txt&#39;,</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co">//   name: &#39;file&#39; }</span></span></code></pre></div>
+<pre class="text"><code>┌─────────────────────┬────────────┐
+│          dir        │    base    │
+├──────┬              ├──────┬─────┤
+│ root │              │ name │ ext │
+&quot; C:\      path\dir   \ file  .txt &quot;
+└──────┴──────────────┴──────┴─────┘
+(All spaces in the &quot;&quot; line should be ignored. They are purely for formatting.)</code></pre>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if <code>path</code> is not a string.</p>
+<h2 id="path.posix"><code>path.posix</code></h2>
+<!-- YAML
+added: v0.11.15
+changes:
+  - version: v15.3.0
+    pr-url: https://github.com/nodejs/node/pull/34962
+    description: Exposed as `require('path/posix')`.
+-->
+<ul>
+<li>Type: {Object}</li>
+</ul>
+<p>The <code>path.posix</code> property provides access to POSIX
+specific implementations of the <code>path</code> methods.</p>
+<p>The API is accessible via <code>require('node:path').posix</code> or
+<code>require('node:path/posix')</code>.</p>
+<h2 id="path.relativefrom-to"><code>path.relative(from, to)</code></h2>
+<!-- YAML
+added: v0.5.0
+changes:
+  - version: v6.8.0
+    pr-url: https://github.com/nodejs/node/pull/8523
+    description: On Windows, the leading slashes for UNC paths are now included
+                 in the return value.
+-->
+<ul>
+<li><code>from</code> {string}</li>
+<li><code>to</code> {string}</li>
+<li>Returns: {string}</li>
+</ul>
+<p>The <code>path.relative()</code> method returns the relative path
+from <code>from</code> to <code>to</code> based on the current working
+directory. If <code>from</code> and <code>to</code> each resolve to the
+same path (after calling <code>path.resolve()</code> on each), a
+zero-length string is returned.</p>
+<p>If a zero-length string is passed as <code>from</code> or
+<code>to</code>, the current working directory will be used instead of
+the zero-length strings.</p>
+<p>For example, on POSIX:</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">relative</span>(<span class="st">&#39;/data/orandea/test/aaa&#39;</span><span class="op">,</span> <span class="st">&#39;/data/orandea/impl/bbb&#39;</span>)<span class="op">;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;../../impl/bbb&#39;</span></span></code></pre></div>
+<p>On Windows:</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">relative</span>(<span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">orandea</span><span class="sc">\\</span><span class="st">test</span><span class="sc">\\</span><span class="st">aaa&#39;</span><span class="op">,</span> <span class="st">&#39;C:</span><span class="sc">\\</span><span class="st">orandea</span><span class="sc">\\</span><span class="st">impl</span><span class="sc">\\</span><span class="st">bbb&#39;</span>)<span class="op">;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;..\\..\\impl\\bbb&#39;</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if either <code>from</code> or <code>to</code> is not a
+string.</p>
+<h2 id="path.resolve...paths"><code>path.resolve([...paths])</code></h2>
+<!-- YAML
+added: v0.3.4
+-->
+<ul>
+<li><code>...paths</code> {string} A sequence of paths or path
+segments</li>
+<li>Returns: {string}</li>
+</ul>
+<p>The <code>path.resolve()</code> method resolves a sequence of paths
+or path segments into an absolute path.</p>
+<p>The given sequence of paths is processed from right to left, with
+each subsequent <code>path</code> prepended until an absolute path is
+constructed. For instance, given the sequence of path segments:
+<code>/foo</code>, <code>/bar</code>, <code>baz</code>, calling
+<code>path.resolve('/foo', '/bar', 'baz')</code> would return
+<code>/bar/baz</code> because <code>'baz'</code> is not an absolute path
+but <code>'/bar' + '/' + 'baz'</code> is.</p>
+<p>If, after processing all given <code>path</code> segments, an
+absolute path has not yet been generated, the current working directory
+is used.</p>
+<p>The resulting path is normalized and trailing slashes are removed
+unless the path is resolved to the root directory.</p>
+<p>Zero-length <code>path</code> segments are ignored.</p>
+<p>If no <code>path</code> segments are passed,
+<code>path.resolve()</code> will return the absolute path of the current
+working directory.</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">resolve</span>(<span class="st">&#39;/foo/bar&#39;</span><span class="op">,</span> <span class="st">&#39;./baz&#39;</span>)<span class="op">;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/foo/bar/baz&#39;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">resolve</span>(<span class="st">&#39;/foo/bar&#39;</span><span class="op">,</span> <span class="st">&#39;/tmp/file/&#39;</span>)<span class="op">;</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: &#39;/tmp/file&#39;</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>path<span class="op">.</span><span class="fu">resolve</span>(<span class="st">&#39;wwwroot&#39;</span><span class="op">,</span> <span class="st">&#39;static_files/png/&#39;</span><span class="op">,</span> <span class="st">&#39;../gif/image.gif&#39;</span>)<span class="op">;</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="co">// If the current working directory is /home/myself/node,</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="co">// this returns &#39;/home/myself/node/wwwroot/static_files/gif/image.gif&#39;</span></span></code></pre></div>
+<p>A <a href="errors.md#class-typeerror"><code>TypeError</code></a> is
+thrown if any of the arguments is not a string.</p>
+<h2 id="path.sep"><code>path.sep</code></h2>
+<!-- YAML
+added: v0.7.9
+-->
+<ul>
+<li>Type: {string}</li>
+</ul>
+<p>Provides the platform-specific path segment separator:</p>
+<ul>
+<li><code>\</code> on Windows</li>
+<li><code>/</code> on POSIX</li>
+</ul>
+<p>For example, on POSIX:</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;foo/bar/baz&#39;</span><span class="op">.</span><span class="fu">split</span>(path<span class="op">.</span><span class="at">sep</span>)<span class="op">;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: [&#39;foo&#39;, &#39;bar&#39;, &#39;baz&#39;]</span></span></code></pre></div>
+<p>On Windows:</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;foo</span><span class="sc">\\</span><span class="st">bar</span><span class="sc">\\</span><span class="st">baz&#39;</span><span class="op">.</span><span class="fu">split</span>(path<span class="op">.</span><span class="at">sep</span>)<span class="op">;</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: [&#39;foo&#39;, &#39;bar&#39;, &#39;baz&#39;]</span></span></code></pre></div>
+<p>On Windows, both the forward slash (<code>/</code>) and backward
+slash (<code>\</code>) are accepted as path segment separators; however,
+the <code>path</code> methods only add backward slashes
+(<code>\</code>).</p>
+<h2
+id="path.tonamespacedpathpath"><code>path.toNamespacedPath(path)</code></h2>
+<!-- YAML
+added: v9.0.0
+-->
+<ul>
+<li><code>path</code> {string}</li>
+<li>Returns: {string}</li>
+</ul>
+<p>On Windows systems only, returns an equivalent <a
+href="https://docs.microsoft.com/en-us/windows/desktop/FileIO/naming-a-file#namespaces">namespace-prefixed
+path</a> for the given <code>path</code>. If <code>path</code> is not a
+string, <code>path</code> will be returned without modifications.</p>
+<p>This method is meaningful only on Windows systems. On POSIX systems,
+the method is non-operational and always returns <code>path</code>
+without modifications.</p>
+<h2 id="path.win32"><code>path.win32</code></h2>
+<!-- YAML
+added: v0.11.15
+changes:
+  - version: v15.3.0
+    pr-url: https://github.com/nodejs/node/pull/34962
+    description: Exposed as `require('path/win32')`.
+-->
+<ul>
+<li>Type: {Object}</li>
+</ul>
+<p>The <code>path.win32</code> property provides access to
+Windows-specific implementations of the <code>path</code> methods.</p>
+<p>The API is accessible via <code>require('node:path').win32</code> or
+<code>require('node:path/win32')</code>.</p>
+</body>
+</html>

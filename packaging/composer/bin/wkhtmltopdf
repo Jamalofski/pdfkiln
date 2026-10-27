@@ -1,0 +1,5 @@
+#!/usr/bin/env php
+<?php
+// vendor/bin/wkhtmltopdf: pdfkiln's wkhtmltopdf, downloaded on first use.
+require_once __DIR__ . '/../src/launch.php';
+exit(\Pdfkiln\launch('wkhtmltopdf', array_slice($argv, 1)));

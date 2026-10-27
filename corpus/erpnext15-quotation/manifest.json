@@ -1,0 +1,41 @@
+{
+  "id": "erpnext15-quotation",
+  "title": "ERPNext 15 quotation, Standard print format, Classic print style, US Letter, 1 page",
+  "app": "Frappe 15.124.0 + ERPNext 15.124.1",
+  "license": "MIT AND GPL-3.0-only AND BSD-3-Clause",
+  "source": "https://github.com/frappe/frappe/blob/f1cf50cf9bbc641bb015adb7008bf2ea1c8483ab/frappe/templates/print_formats/standard.html",
+  "versioned": true,
+  "args": [
+    "--print-media-type",
+    "--background",
+    "--images",
+    "--quiet",
+    "--encoding",
+    "UTF-8",
+    "--margin-right",
+    "15mm",
+    "--margin-left",
+    "15mm",
+    "--header-html",
+    "input/header.html",
+    "--footer-html",
+    "input/footer.html",
+    "--page-size",
+    "Letter",
+    "--disable-javascript",
+    "--disable-local-file-access",
+    "--disable-smart-shrinking",
+    "-",
+    "{out}"
+  ],
+  "stdin": "input/page.html",
+  "httpHeaders": {
+    "/assets/": {
+      "Cache-Control": "max-age=43200, public"
+    },
+    "/files/": {
+      "Cache-Control": "max-age=43200, public"
+    }
+  },
+  "notes": "Submitted Quotation SAL-QTN-2026-00001, 3 lines; Print Settings changed to print style Classic and PDF page size Letter (ERPNext ships no print format for Quotation). Captured from Frappe 15.124.0 (commit f1cf50cf9bbc) + ERPNext 15.124.1 (commit 4e0dce9ea8d3), printed through HTTP /api/method/frappe.utils.print_format.download_pdf with a logged-in session. Frappe (pdfkit 1.0.0) pipes the page on stdin and reads the PDF from stdout: `-` `-` at the end; the output `-` is replaced by {out}. Frappe passed `--cookie-jar /tmp/<random>.jar` (session cookie sid); that pair is removed. /tmp/frappe-pdf-<random>.html header and footer files became input/header.html and input/footer.html. Origin http://127.0.0.1:8000 rewritten to http://127.0.0.1:8765 in input/page.html and input/header.html (no www/ file contained it). No margin-top or margin-bottom is passed: the header and footer heights decide the margins. The footer page inlines the whole print CSS; the header page links it. JavaScript is disabled for the page but the footer's subst() still fills the page numbers. httpHeaders are the Cache-Control values the Frappe server sent. The text relies on fonts installed on the machine (Inter, then sans-serif): the print CSS has no @font-face. ERPNext parts (item, totals and taxes templates, document layout) are GPL-3.0; Frappe parts (print view, Standard format, header/footer template, print CSS) are MIT; the print CSS also bundles Bootstrap 3.3.1, normalize.css and HTML5 Boilerplate (MIT) and Quill 2.0.3 CSS (BSD-3-Clause); the letter head, logo and business data were written for this entry. See SOURCE.md."
+}

@@ -1,0 +1,773 @@
+name: ci
+
+# Unit and command tests on the three systems, and the corpus replayed
+# with the command against wkhtmltopdf 0.12.6 (bench/compat.ts).
+#
+# Started by hand only (gh workflow run ci.yml --ref main), before a
+# release; day-to-day checks run locally. Each channel is installed from
+# as a user would (jobs channels and dotnet).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      PDFKILN_PYTHON: python
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Fonts (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-liberation fonts-dejavu-core fontconfig \
+            libjpeg-turbo8 libxrender1 libxext6 xfonts-75dpi xfonts-base
+
+      - uses: actions/cache@v6
+        with:
+          path: .cache/downloads
+          key: downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('chromium.json', 'bench/wkhtmltopdf.json') }}
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run fetch:chromium
+      - run: pip install -r bench/requirements.txt
+
+      # Ubuntu 24.04 keeps unprivileged user namespaces from unconfined
+      # programs; Chromium's sandbox needs them. An AppArmor profile for the
+      # binary fixes it, as Ubuntu does for Chrome: the sandbox stays on.
+      - name: AppArmor profile for Chromium (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          exe="$(node dist/scripts/fetch-chromium.js)"
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile pdfkiln-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$exe" \
+            | sudo tee /etc/apparmor.d/pdfkiln-chromium
+          sudo apparmor_parser -r /etc/apparmor.d/pdfkiln-chromium
+          node dist/bench/sandbox.js
+
+      - name: Chromium pin and Stable channel (Linux)
+        if: runner.os == 'Linux'
+        run: echo "pinned $(node -p "require('./chromium.json').version"), Stable $(node dist/scripts/update-chromium.js --dry-run)"
+
+      - name: Unit tests
+        run: node --test dist/test/options.test.js dist/test/parse.test.js dist/test/units.test.js dist/test/messages.test.js dist/test/emulation.test.js dist/test/version.test.js dist/test/unzip.test.js dist/test/server.test.js dist/test/manifests.test.js
+
+      - name: Command tests
+        run: node --test dist/test/cli.test.js
+
+      - name: Command tests, bundled
+        run: |
+          npm run bundle
+          node --test dist/test/cli.test.js
+        env:
+          PDFKILN_TEST_BUNDLE: '1'
+
+      # A measure: the two-page Odoo invoice with and without pdfkiln serve,
+      # alternated (wkhtmltopdf 0.12.6 is compared in the compat job; there
+      # is none for macOS).
+      - name: Chromium kept open, two-page Odoo invoice
+        run: |
+          node dist/bench/call.js --server --no-wkhtmltopdf --delay 200 --runs 9 | tee serve.txt
+          { echo '## pdfkiln serve, two-page Odoo invoice'; echo; echo '```'; cat serve.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+  compat:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      PDFKILN_PYTHON: python
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Fonts and wkhtmltopdf libraries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-liberation fonts-dejavu-core fontconfig \
+            libjpeg-turbo8 libxrender1 libxext6 xfonts-75dpi xfonts-base
+
+      - uses: actions/cache@v6
+        with:
+          path: .cache/downloads
+          key: downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('chromium.json', 'bench/wkhtmltopdf.json') }}
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run fetch:chromium
+      - run: npm run fetch:wkhtmltopdf
+      - run: pip install -r bench/requirements.txt
+
+      - name: AppArmor profile for Chromium (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          exe="$(node dist/scripts/fetch-chromium.js)"
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile pdfkiln-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$exe" \
+            | sudo tee /etc/apparmor.d/pdfkiln-chromium
+          sudo apparmor_parser -r /etc/apparmor.d/pdfkiln-chromium
+
+      # wkhtmltopdf's Qt draws text with GDI on Windows: the display's DPI
+      # may change its glyph sizes, so it is printed with the results.
+      - name: Display DPI (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Get-ItemProperty 'HKCU:\Control Panel\Desktop' | Select-Object LogPixels, Win8DpiScaling | Format-List
+          Get-ItemProperty 'HKCU:\Control Panel\Desktop\WindowMetrics' -ErrorAction SilentlyContinue | Select-Object AppliedDPI | Format-List
+          Add-Type -AssemblyName System.Drawing
+          $g = [System.Drawing.Graphics]::FromHwnd([IntPtr]::Zero); "DpiX $($g.DpiX) DpiY $($g.DpiY)"
+        shell: pwsh
+
+      - name: Corpus against wkhtmltopdf 0.12.6
+        run: node dist/bench/compat.js | tee bench-compat.txt
+        shell: bash
+
+      - name: Details of the entries below 100 %
+        if: always()
+        run: python -I bench/detail.py bench/out/compat
+        shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
+
+      - name: Complete call, two-page Odoo invoice
+        run: |
+          npm run bundle
+          node dist/bench/call.js --delay 200 | tee -a bench-compat.txt
+          node dist/bench/call.js --runs 7 | tee -a bench-compat.txt
+        shell: bash
+
+      # On Windows, wkhtmltopdf's Qt takes its font metrics from GDI.
+      - name: Font metrics, wkhtmltopdf against pdfkiln
+        run: node dist/bench/gdi.js | tee -a bench-compat.txt
+        shell: bash
+
+      - name: Summary
+        if: always()
+        run: |
+          { echo '## Corpus, pdfkiln command vs wkhtmltopdf 0.12.6'; echo; echo '```'; cat bench-compat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compat-${{ matrix.os }}
+          path: |
+            bench/out/compat
+            bench/out/call
+            bench/out/gdi
+          retention-days: 30
+
+  # The libraries of the specification, their own test suites run with
+  # wkhtmltopdf 0.12.6 first (for reference), then with pdfkiln.
+  libraries:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Fonts and wkhtmltopdf libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-liberation fonts-dejavu-core fontconfig \
+            libjpeg-turbo8 libxrender1 libxext6 xfonts-75dpi xfonts-base libsqlite3-dev
+
+      - uses: actions/cache@v6
+        with:
+          path: .cache/downloads
+          key: downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('chromium.json', 'bench/wkhtmltopdf.json') }}
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run bundle
+      - run: npm run fetch:chromium
+      - run: npm run fetch:wkhtmltopdf
+
+      - name: AppArmor profile for Chromium
+        run: |
+          exe="$(node dist/scripts/fetch-chromium.js)"
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile pdfkiln-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$exe" \
+            | sudo tee /etc/apparmor.d/pdfkiln-chromium
+          sudo apparmor_parser -r /etc/apparmor.d/pdfkiln-chromium
+
+      - name: With wkhtmltopdf 0.12.6, for reference
+        continue-on-error: true
+        run: |
+          wk="$PWD/.cache/wkhtmltopdf/0.12.6"
+          for p in wkhtmltopdf wkhtmltoimage; do
+            printf '#!/bin/sh\nLD_LIBRARY_PATH=%s exec %s "$@"\n' "$wk/linux-x64-libssl/usr/lib/x86_64-linux-gnu" "$wk/linux-x64/usr/local/bin/$p" \
+              | sudo tee "/usr/local/bin/$p" > /dev/null
+            sudo chmod +x "/usr/local/bin/$p"
+          done
+          test/libraries/run.sh "$RUNNER_TEMP/libs-wk" | tee libraries.txt
+        shell: bash
+
+      - name: With pdfkiln
+        run: |
+          for p in wkhtmltopdf wkhtmltoimage; do
+            printf '#!/bin/sh\nexec node %s "$@"\n' "$PWD/dist/bundle/$p.cjs" | sudo tee "/usr/local/bin/$p" > /dev/null
+            sudo chmod +x "/usr/local/bin/$p"
+          done
+          test/libraries/run.sh "$RUNNER_TEMP/libs-pdfkiln" | tee -a libraries.txt
+        shell: bash
+
+      - name: Summary
+        if: always()
+        run: |
+          { echo '## Library test suites'; echo; echo '```'; cat libraries.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: libraries
+          path: ${{ runner.temp }}/libs-*/*.log
+          retention-days: 30
+
+  # The archive of each platform (scripts/package.ts), tested as shipped.
+  # Workflow artifacts only, kept two days: nothing is published.
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      PDFKILN_PYTHON: python
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v6
+        with:
+          path: .cache/downloads
+          key: downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('chromium.json', 'bench/wkhtmltopdf.json') }}
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run fetch:chromium
+      - run: pip install -r bench/requirements.txt
+      - run: npm run bundle
+      - run: node dist/scripts/sea.js
+
+      - name: Launcher (Windows)
+        if: runner.os == 'Windows'
+        run: gcc -municode -O2 -s -Wall -o dist/wkhtmltopdf.exe launcher/wkhtmltopdf.c
+        shell: bash
+
+      - name: Archive
+        run: node dist/scripts/package.js ${{ runner.os == 'Windows' && '--launcher dist/wkhtmltopdf.exe' || '' }}
+        shell: bash
+
+      - name: AppArmor profile for the packaged Chromium (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          exe="$(ls -d "$PWD"/dist/package/*/chromium/chrome-headless-shell)"
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile pdfkiln-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$exe" \
+            | sudo tee /etc/apparmor.d/pdfkiln-chromium
+          sudo apparmor_parser -r /etc/apparmor.d/pdfkiln-chromium
+
+      - name: Command tests on the archive
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then
+            bin="$(ls -d "$PWD"/dist/package/*/wkhtmltopdf/bin)"
+            export PDFKILN_TEST_WKHTMLTOPDF="$bin/wkhtmltopdf.exe" PDFKILN_TEST_PDFKILN="$bin/pdfkiln.exe" PDFKILN_TEST_WKHTMLTOIMAGE="$bin/wkhtmltoimage.exe"
+          else
+            bin="$(ls -d "$PWD"/dist/package/*/)"
+            export PDFKILN_TEST_WKHTMLTOPDF="${bin}wkhtmltopdf" PDFKILN_TEST_PDFKILN="${bin}pdfkiln" PDFKILN_TEST_WKHTMLTOIMAGE="${bin}wkhtmltoimage"
+          fi
+          "$PDFKILN_TEST_WKHTMLTOPDF" --version
+          "$PDFKILN_TEST_WKHTMLTOIMAGE" --version
+          node --test dist/test/cli.test.js
+        shell: bash
+
+      # The installer (packaging/windows/pdfkiln.iss), installed silently
+      # where the old wkhtmltopdf installer went, run, and uninstalled.
+      - name: Windows installer, built, installed and tested (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $src = (Get-ChildItem dist/package -Directory | Select-Object -First 1).FullName + '\wkhtmltopdf'
+          $version = node -p "require('./package.json').version"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Q "/DVersion=$version" "/DSource=$src" "/DOutput=$PWD\dist\package" packaging\windows\pdfkiln.iss
+          if ($LASTEXITCODE) { exit 1 }
+          $setup = (Get-ChildItem dist/package/*-setup.exe).FullName
+          "$((Get-FileHash $setup -Algorithm SHA256).Hash.ToLower())  $(Split-Path $setup -Leaf)" | Out-File -Encoding ascii "$setup.sha256"
+          Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=addtopath' -Wait
+          $exe = "$env:ProgramFiles\wkhtmltopdf\bin\wkhtmltopdf.exe"
+          & $exe --version
+          if ($LASTEXITCODE) { exit 1 }
+          & "$env:ProgramFiles\wkhtmltopdf\bin\wkhtmltoimage.exe" --version
+          if ($LASTEXITCODE) { exit 1 }
+          '<h1>installed</h1>' | & $exe -q - installed.pdf
+          if ($LASTEXITCODE -or -not (Get-Content installed.pdf -TotalCount 1).StartsWith('%PDF-')) { exit 1 }
+          Start-Process "$env:ProgramFiles\wkhtmltopdf\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES' -Wait
+          Start-Sleep 5
+          if (Test-Path $exe) { Write-Error 'still installed'; exit 1 }
+
+      # Installed from the packed tarball; the first conversion downloads
+      # Chromium into PDFKILN_CACHE_DIR. On Linux, the AppArmor profile is
+      # loaded first for the path Chromium will have.
+      - name: npm package, installed and tested
+        run: |
+          node dist/scripts/npm.js
+          prefix="$RUNNER_TEMP/npm-prefix"
+          mkdir -p "$prefix"
+          npm install --prefix "$prefix" --no-audit --no-fund ./dist/package/pdfkiln-*.tgz
+          export PDFKILN_CACHE_DIR="$RUNNER_TEMP/pdfkiln-cache"
+          if [ "$RUNNER_OS" = Linux ]; then
+            exe="$PDFKILN_CACHE_DIR/chromium/$(node -p "require('./chromium.json').version")/chrome-headless-shell-linux64/chrome-headless-shell"
+            printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile pdfkiln-npm %s flags=(unconfined) {\n  userns,\n}\n' "$exe" \
+              | sudo tee /etc/apparmor.d/pdfkiln-npm
+            sudo apparmor_parser -r /etc/apparmor.d/pdfkiln-npm
+          fi
+          bundle="$prefix/node_modules/@pdfkiln/pdfkiln/dist/bundle"
+          echo '<h1>npm</h1>' | node "$bundle/wkhtmltopdf.cjs" - npm.pdf
+          head -c 5 npm.pdf | grep -q '%PDF-'
+          ls "$PDFKILN_CACHE_DIR/chromium"
+          if [ "$RUNNER_OS" != Windows ]; then
+            export PDFKILN_TEST_WKHTMLTOPDF="$prefix/node_modules/.bin/wkhtmltopdf" PDFKILN_TEST_PDFKILN="$prefix/node_modules/.bin/pdfkiln" PDFKILN_TEST_WKHTMLTOIMAGE="$prefix/node_modules/.bin/wkhtmltoimage"
+            node --test dist/test/cli.test.js
+          fi
+        shell: bash
+
+      # The package's postinst loads its own AppArmor profile: no manual step.
+      - name: Debian package, installed and tested (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          node dist/scripts/deb.js
+          sudo apt-get update
+          sudo apt-get install -y ./dist/package/pdfkiln_*.deb
+          cat /etc/apparmor.d/pdfkiln
+          /usr/bin/wkhtmltopdf --version
+          /usr/bin/wkhtmltoimage --version
+          PDFKILN_TEST_WKHTMLTOPDF=/usr/bin/wkhtmltopdf PDFKILN_TEST_PDFKILN=/usr/bin/pdfkiln PDFKILN_TEST_WKHTMLTOIMAGE=/usr/bin/wkhtmltoimage node --test dist/test/cli.test.js
+
+      - name: Docker image, built from the package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          docker build -t pdfkiln:ci -f docker/Dockerfile dist/package
+          docker image ls pdfkiln:ci
+          docker run --rm pdfkiln:ci wkhtmltopdf --version
+
+      # A measure, not a test yet:
+      # which docker run options let Chromium's sandbox start.
+      - name: Chromium's sandbox in Docker (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          { echo '## Sandbox in Docker'; echo; echo '| docker run options | exit code | PDF | first line of stderr |'; echo '| --- | --- | --- | --- |'; } >> "$GITHUB_STEP_SUMMARY"
+          for opts in '' '--security-opt seccomp=docker/seccomp.json' '--security-opt seccomp=unconfined' '--security-opt apparmor=unconfined' \
+                      '--security-opt seccomp=unconfined --security-opt apparmor=unconfined' '--cap-add SYS_ADMIN'; do
+            set +e
+            echo '<h1>pdfkiln</h1>' | docker run --rm -i $opts pdfkiln:ci wkhtmltopdf -q - - > docker.pdf 2> docker.err
+            code=$?
+            set -e
+            pdf=$(head -c 5 docker.pdf | grep -q '%PDF-' && echo yes || echo no)
+            echo "options: ${opts:-none}, exit $code, PDF $pdf"; cat docker.err
+            echo "| \`${opts:-none}\` | $code | $pdf | $(head -n 1 docker.err | cut -c 1-160 | tr '|' '/') |" >> "$GITHUB_STEP_SUMMARY"
+          done
+        shell: bash
+
+      # The APT repository (scripts/apt.ts), signed with a throwaway key and
+      # served from the runner: set up by hand as the README says, installed
+      # from without a question, upgraded, refused once its index is
+      # tampered with, and gone with the package. Nothing is published.
+      - name: APT repository with a throwaway key (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -m 700 "$GNUPGHOME"
+          gpg --batch --passphrase '' --quick-generate-key 'pdfkiln APT test key' ed25519 sign 1d
+          fpr=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/ { print $10; exit }')
+          gpg --armor --export "$fpr" > "$RUNNER_TEMP/test-key.asc"
+          url=http://127.0.0.1:8099 debs="$RUNNER_TEMP/apt-debs" repo="$RUNNER_TEMP/apt"
+          node dist/scripts/deb.js --apt-url $url --apt-key "$RUNNER_TEMP/test-key.asc" --out "$debs"
+          node dist/scripts/apt.js --repo "$repo" --key "$fpr" "$debs"/pdfkiln_*-1_amd64.deb
+          python3 -m http.server 8099 --bind 127.0.0.1 --directory "$repo" > /dev/null 2>&1 &
+          server=$!
+          sudo apt-get remove -y pdfkiln
+          curl -fsS $url/pdfkiln-archive-keyring.asc | sudo tee /usr/share/keyrings/pdfkiln-archive-keyring.asc > /dev/null
+          printf 'Types: deb\nURIs: %s\nSuites: stable\nComponents: main\nSigned-By: /usr/share/keyrings/pdfkiln-archive-keyring.asc\n' $url \
+            | sudo tee /etc/apt/sources.list.d/pdfkiln.sources
+          # Only our source; a bad signature is a warning for apt, so any W: fails.
+          update() {
+            sudo apt-get update -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/pdfkiln.sources -o Dir::Etc::sourceparts=- \
+              -o APT::Get::List-Cleanup=0 > "$RUNNER_TEMP/update.txt" 2>&1 || { cat "$RUNNER_TEMP/update.txt"; return 1; }
+            cat "$RUNNER_TEMP/update.txt"
+            ! grep -qE '^(W|E|Err):' "$RUNNER_TEMP/update.txt"
+          }
+          update
+          sudo apt-get install -y pdfkiln < /dev/null
+          dpkg -S /etc/apt/sources.list.d/pdfkiln.sources
+          /usr/bin/wkhtmltopdf --version
+          node dist/scripts/deb.js --apt-url $url --apt-key "$RUNNER_TEMP/test-key.asc" --out "$debs" --revision 2
+          node dist/scripts/apt.js --repo "$repo" --key "$fpr" "$debs"/pdfkiln_*-2_amd64.deb
+          update
+          sudo apt-get install -y --only-upgrade pdfkiln < /dev/null
+          dpkg-query -W -f '${Version}\n' pdfkiln | grep -- '-2$'
+          sed -i 's/^Label: pdfkiln$/Label: pdfkilm/' "$repo/dists/stable/InRelease"
+          if update; then echo 'a tampered index was accepted'; exit 1; fi
+          sudo apt-get purge -y pdfkiln
+          test ! -e /etc/apt/sources.list.d/pdfkiln.sources
+          kill $server
+        shell: bash
+
+      # Provenance of the files a release holds, those with a .sha256
+      # (release.yml checks it). GitHub attests in a private repository only
+      # with Enterprise Cloud: skipped while this one is private.
+      - name: Provenance (public repository)
+        if: ${{ !github.event.repository.private }}
+        run: cat dist/package/*.sha256 | tr -d '\r' > "$RUNNER_TEMP/subjects.sha256"
+        shell: bash
+
+      - if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-checksums: ${{ runner.temp }}/subjects.sha256
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: package-${{ matrix.os }}
+          path: |
+            dist/package/*.tar.gz
+            dist/package/*.zip
+            dist/package/*.deb
+            dist/package/*.tgz
+            dist/package/*-setup.exe
+            dist/package/*.sha256
+          retention-days: 2
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sums-${{ matrix.os }}
+          path: dist/package/*.sha256
+          retention-days: 1
+
+  # The manifests of the v1.1 channels (scripts/manifests.ts), from the sums
+  # of every package, the macOS ones included.
+  # Workflow artifact only: nothing is published.
+  manifests:
+    needs: package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: sums-*
+          path: sums
+          merge-multiple: true
+
+      - run: node dist/scripts/manifests.js --sums sums
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: manifests
+          path: dist/manifests
+          retention-days: 14
+
+  # The channels installed as a user installs them, from this run's
+  # packages and manifests: Composer (driven by knp-snappy) and Homebrew on
+  # macOS; Composer, Scoop and winget on Windows. The release files are
+  # served from the runner, at the address that replaces GitHub Releases'
+  # in the manifests. Scoop's checkver asks GitHub for the latest release:
+  # not before the first one.
+  channels:
+    needs: manifests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: package-*
+          path: release
+          merge-multiple: true
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: manifests
+          path: manifests
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+
+      # A process left running stays up until the end of the job.
+      - name: Release files served from the runner
+        run: |
+          py=python; [ "$RUNNER_OS" = macOS ] && py=python3
+          "$py" - manifests <<'EOF'
+          import pathlib, re, sys
+          for p in pathlib.Path(sys.argv[1]).rglob('*'):
+              if p.is_file() and p.suffix in ('.json', '.yaml', '.rb'):
+                  text = p.read_text(encoding='utf-8')
+                  served = re.sub(r'https://github\.com/Jamalofski/pdfkiln/releases/download/v[^/"\s]+', 'http://127.0.0.1:8090', text)
+                  if served != text:
+                      p.write_text(served, encoding='utf-8', newline='')
+                      print(p)
+          EOF
+          if [ "$RUNNER_OS" = Windows ]; then
+            powershell -Command "Start-Process python -ArgumentList '-m','http.server','8090','--bind','127.0.0.1','--directory','release' -WindowStyle Hidden"
+          else
+            nohup python3 -m http.server 8090 --bind 127.0.0.1 --directory release > /dev/null 2>&1 &
+          fi
+          ls -l release
+          for i in $(seq 30); do curl -fsS -o /dev/null http://127.0.0.1:8090/ && break; sleep 1; done
+        shell: bash
+
+      # As the README says, then knp-snappy (test/libraries/snappy-smoke.php)
+      # driving Pdfkiln\binary(), and vendor/bin/wkhtmltopdf on macOS: on
+      # Windows, PHP's is_executable refuses the .bat Composer writes there.
+      - name: Composer package, installed and driven by knp-snappy
+        run: |
+          ws=$(cygpath -m "$GITHUB_WORKSPACE" 2>/dev/null || echo "$GITHUB_WORKSPACE")
+          app="$ws/composer-app"
+          mkdir "$app" && cd "$app"
+          printf '{"repositories": [{"type": "path", "url": "%s/manifests/composer", "options": {"symlink": false}}], "require": {"pdfkiln/pdfkiln": "*@dev", "knplabs/knp-snappy": "^1.5"}}\n' "$ws" > composer.json
+          composer install --no-interaction --no-progress
+          export PDFKILN_CACHE_DIR="$ws/pdfkiln-cache"
+          if [ "$RUNNER_OS" = Windows ]; then vendor/bin/wkhtmltopdf.bat --version; else vendor/bin/wkhtmltopdf --version; fi
+          php "$ws/test/libraries/snappy-smoke.php" vendor/autoload.php "$(php -r 'require "vendor/autoload.php"; echo Pdfkiln\binary();')"
+          if [ "$RUNNER_OS" != Windows ]; then
+            php "$ws/test/libraries/snappy-smoke.php" vendor/autoload.php "$app/vendor/bin/wkhtmltopdf"
+          fi
+          ls "$PDFKILN_CACHE_DIR/dist"
+        shell: bash
+
+      - name: Homebrew formula, installed and tested (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew tap-new --no-git pdfkiln/local
+          cp manifests/homebrew/Formula/pdfkiln.rb "$(brew --repository pdfkiln/local)/Formula/"
+          brew install pdfkiln/local/pdfkiln
+          brew test pdfkiln/local/pdfkiln
+          bin="$(brew --prefix)/bin"
+          echo '<h1>Homebrew</h1>' | "$bin/wkhtmltopdf" -q - brew.pdf
+          [ "$(head -c 5 brew.pdf)" = '%PDF-' ] || { echo 'brew.pdf is not a PDF'; od -c brew.pdf | head -n 2; exit 1; }
+          echo '<h1>Homebrew</h1>' | "$bin/wkhtmltoimage" -q --format png - brew.png
+          # Compared byte for byte: the step once failed after brew test with
+          # no message (run 40223567684); grep fed the PNG signature's 0x89
+          # byte, in a UTF-8 locale, is the suspect.
+          [ "$(head -c 4 brew.png | tail -c 3)" = PNG ] || { echo 'brew.png is not a PNG'; od -c brew.png | head -n 2; exit 1; }
+          brew uninstall pdfkiln
+        shell: bash
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+          HOMEBREW_NO_ENV_HINTS: '1'
+
+      - name: Scoop manifest, installed and tested (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Invoke-RestMethod https://get.scoop.sh -OutFile "$env:RUNNER_TEMP\install-scoop.ps1"
+          & "$env:RUNNER_TEMP\install-scoop.ps1" -RunAsAdmin
+          $scoop = "$env:USERPROFILE\scoop"
+          & "$scoop\shims\scoop.cmd" install .\manifests\scoop\pdfkiln.json
+          if ($LASTEXITCODE) { exit 1 }
+          $exe = "$scoop\shims\wkhtmltopdf.exe"
+          & $exe --version
+          if ($LASTEXITCODE) { exit 1 }
+          '<h1>Scoop</h1>' | & $exe -q - scoop.pdf
+          if ($LASTEXITCODE -or -not (Get-Content scoop.pdf -TotalCount 1).StartsWith('%PDF-')) { exit 1 }
+          & "$scoop\shims\scoop.cmd" uninstall pdfkiln
+          if ($LASTEXITCODE) { exit 1 }
+
+      # The installer, from the manifest: in C:\Program Files\wkhtmltopdf.
+      # A known issue of 1.0 (README.md, "Known issues in 1.0"):
+      # winget stops before the installer starts. Kept, not blocking, until
+      # it is fixed.
+      - name: winget manifest, validated, installed and tested (Windows)
+        id: winget
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $dir = (Get-ChildItem manifests\winget\manifests\j\Jamalofski\pdfkiln -Directory | Select-Object -First 1).FullName
+          winget --version
+          winget validate --manifest $dir
+          if ($LASTEXITCODE) { exit 1 }
+          winget settings --enable LocalManifestFiles
+          # The install hung until the job's timeout, after "Starting package
+          # install..." (run 40223567684); then, bounded, winget showed a
+          # dialog and the installer had not started (run 40227192313).
+          # 5 minutes at most, then what is running, the dialog's text, and
+          # the logs of winget and of the installer.
+          $p = Start-Process winget -NoNewWindow -PassThru -ArgumentList 'install', '--manifest', $dir, '--silent',
+            '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity', '--verbose-logs'
+          $null = $p.Handle
+          if (-not $p.WaitForExit(300000)) {
+            Get-Process | Where-Object { $_.MainWindowTitle } | Format-Table Id, Name, MainWindowTitle -AutoSize
+            try {
+              Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
+              $mine = New-Object Windows.Automation.PropertyCondition ([Windows.Automation.AutomationElement]::ProcessIdProperty), $p.Id
+              foreach ($w in [Windows.Automation.AutomationElement]::RootElement.FindAll([Windows.Automation.TreeScope]::Children, $mine)) {
+                "== dialog: $($w.Current.Name)"
+                $w.FindAll([Windows.Automation.TreeScope]::Descendants, [Windows.Automation.Condition]::TrueCondition) |
+                  ForEach-Object { $_.Current.Name } | Where-Object { $_ } | Select-Object -Unique
+              }
+            } catch { "dialog text unavailable: $_" }
+            Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'setup|pdfkiln|wkhtml|winget|msiexec' } |
+              Format-Table ProcessId, ParentProcessId, Name, CommandLine -AutoSize -Wrap
+            Get-ChildItem "$env:LOCALAPPDATA\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir", "$env:TEMP" -Filter *.log -Recurse -ErrorAction SilentlyContinue |
+              Sort-Object LastWriteTime | Select-Object -Last 6 | ForEach-Object { "== $($_.FullName)"; Get-Content $_.FullName -Tail 60 }
+            exit 1
+          }
+          if ($p.ExitCode) { "winget exit code $($p.ExitCode)"; exit 1 }
+          $exe = "$env:ProgramFiles\wkhtmltopdf\bin\wkhtmltopdf.exe"
+          & $exe --version
+          if ($LASTEXITCODE) { exit 1 }
+          '<h1>winget</h1>' | & $exe -q - winget.pdf
+          if ($LASTEXITCODE -or -not (Get-Content winget.pdf -TotalCount 1).StartsWith('%PDF-')) { exit 1 }
+
+      - name: Known issue, winget
+        if: steps.winget.outcome == 'failure'
+        shell: bash
+        run: |
+          echo '::warning title=Known issue of 1.0::winget stops before the installer starts'
+          echo '- Known issue of 1.0, winget: the install stops before the installer starts (step above).' >> "$GITHUB_STEP_SUMMARY"
+
+  # .NET callers on Windows: Rotativa.AspNetCore's driver on the runner,
+  # then an ASP.NET page in IIS on Windows Server Core (a container, its
+  # system libraries those of Server Core), run as the application pool's
+  # identity, with its user profile loaded (IIS's default), then without.
+  dotnet:
+    needs: package
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: package-windows-2025
+          path: release
+
+      - name: Archive unpacked
+        shell: pwsh
+        run: |
+          $site = "$env:RUNNER_TEMP\iis\site"
+          New-Item -ItemType Directory $site | Out-Null
+          tar.exe -xf (Get-ChildItem release\*.zip).FullName -C $site
+          Copy-Item test\iis\pdf.aspx $site
+          Copy-Item test\iis\Dockerfile "$env:RUNNER_TEMP\iis"
+          Get-ChildItem "$site\wkhtmltopdf\bin" | Select-Object Name, Length
+
+      - name: Rotativa.AspNetCore
+        shell: pwsh
+        run: |
+          dotnet --list-sdks
+          dotnet run --project test\rotativa -- "$env:RUNNER_TEMP\iis\site\wkhtmltopdf\bin"
+          if ($LASTEXITCODE) { exit 1 }
+
+      # A known issue of 1.0 (README.md, "Known issues in 1.0"): as
+      # the application pool's identity, Chromium does not start. Kept, not
+      # blocking, until it is fixed.
+      - name: IIS on Windows Server Core
+        id: iis
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          docker build -t pdfkiln-iis "$env:RUNNER_TEMP\iis"
+          if ($LASTEXITCODE) { exit 1 }
+          docker run -d --name iis pdfkiln-iis
+          if ($LASTEXITCODE) { exit 1 }
+          $ip = docker inspect -f '{{.NetworkSettings.Networks.nat.IPAddress}}' iis
+          for ($i = 0; $i -lt 60; $i++) {
+            if ((curl.exe -s -o NUL -w '%{http_code}' "http://$ip/") -eq '200') { break }
+            Start-Sleep 2
+          }
+          $failed = 0
+          foreach ($case in 'profile', 'no-profile') {
+            if ($case -eq 'no-profile') {
+              docker exec iis C:\Windows\System32\inetsrv\appcmd.exe set apppool DefaultAppPool /processModel.loadUserProfile:false
+              docker exec iis C:\Windows\System32\inetsrv\appcmd.exe recycle apppool DefaultAppPool
+            }
+            $code = curl.exe -s -D "$case.headers" -o "$case.out" -w '%{http_code}' --max-time 120 "http://$ip/pdf.aspx"
+            Get-Content "$case.headers" | Select-String '^X-'
+            $pdf = [string](Get-Content "$case.out" -TotalCount 1 -ErrorAction SilentlyContinue) -like '%PDF-*'
+            "${case}: HTTP $code, PDF $pdf"
+            if (-not $pdf) { Get-Content "$case.out" -ErrorAction SilentlyContinue; $failed = 1 }
+          }
+          docker exec iis C:\Windows\System32\inetsrv\appcmd.exe list apppool DefaultAppPool /text:processModel.loadUserProfile
+          exit $failed
+
+      - name: Known issue, IIS
+        if: steps.iis.outcome == 'failure'
+        shell: bash
+        run: |
+          echo '::warning title=Known issue of 1.0::IIS: as the application pool identity, Chromium does not start'
+          echo '- Known issue of 1.0, IIS: as the application pool identity, Chromium does not start (step above).' >> "$GITHUB_STEP_SUMMARY"

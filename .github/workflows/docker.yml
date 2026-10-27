@@ -1,0 +1,143 @@
+name: docker
+run-name: "Docker image from ci ${{ inputs.ci_run }} and arm64 ${{ inputs.arm64_run }}${{ inputs.confirm != 'publish' && ', dry run' || '' }}"
+
+# The Docker image, ghcr.io/<owner>/pdfkiln, for amd64 and arm64: the
+# Debian packages of two green runs on main (ci.yml, arm64.yml), as CI
+# built and tested them, installed by docker/Dockerfile. Run by hand only,
+# after the version's GitHub release (release.yml). CI keeps packages two
+# days: start both runs on main first.
+#
+#   gh workflow run docker.yml -f ci_run=<id> -f arm64_run=<id>                    dry run
+#   gh workflow run docker.yml -f ci_run=<id> -f arm64_run=<id> -f confirm=publish
+#
+# A dry run builds both images and checks them. With "publish" typed in,
+# they are pushed, tagged with the version and latest, with GitHub's token:
+# no secret. The image's label links it to this repository; GitHub creates
+# it private, and making it public is a setting of the package's, done
+# once. Its provenance is attested once the repository is public.
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run:
+        description: Run of the ci workflow on main
+        required: true
+      arm64_run:
+        description: Run of the arm64 workflow on the same commit
+        required: true
+      confirm:
+        description: Type "publish" to push the image (otherwise, a dry run)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker
+  cancel-in-progress: false
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+      id-token: write
+      attestations: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CI_RUN: ${{ inputs.ci_run }}
+      ARM64_RUN: ${{ inputs.arm64_run }}
+    steps:
+      # Both green, on main, on one commit: the image's.
+      - name: The two runs
+        id: runs
+        run: |
+          view() {
+            [[ "$1" =~ ^[0-9]+$ ]] || return 1
+            gh run view "$1" --repo "$GITHUB_REPOSITORY" --json workflowName,headBranch,conclusion,headSha \
+              --jq '[.workflowName, .headBranch, .conclusion, .headSha] | join(" ")'
+          }
+          read -r ci_name ci_branch ci_conclusion ci_sha <<< "$(view "$CI_RUN")"
+          read -r arm_name arm_branch arm_conclusion arm_sha <<< "$(view "$ARM64_RUN")"
+          echo "ci $CI_RUN: $ci_name, $ci_branch, $ci_conclusion, $ci_sha"
+          echo "arm64 $ARM64_RUN: $arm_name, $arm_branch, $arm_conclusion, $arm_sha"
+          [ "$ci_name $ci_branch $ci_conclusion" = 'ci main success' ] || { echo "::error::$CI_RUN is not a green run of ci on main"; exit 1; }
+          [ "$arm_name $arm_branch $arm_conclusion" = 'arm64 main success' ] || { echo "::error::$ARM64_RUN is not a green run of arm64 on main"; exit 1; }
+          [ "$ci_sha" = "$arm_sha" ] || { echo "::error::the two runs built different commits"; exit 1; }
+          echo "sha=$ci_sha" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.runs.outputs.sha }}
+
+      # Image names are lowercase; the owner's may not be.
+      - name: Name, version and packages
+        id: image
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/pdfkiln" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          gh run download "$CI_RUN" --repo "$GITHUB_REPOSITORY" --name package-ubuntu-24.04 --dir runs/amd64
+          gh run download "$ARM64_RUN" --repo "$GITHUB_REPOSITORY" --name package-linux-arm64 --dir runs/arm64
+          mkdir context
+          mv "runs/amd64/pdfkiln_${version}-1_amd64.deb" "runs/arm64/pdfkiln_${version}-1_arm64.deb" context/
+          ls -l context
+
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        if: inputs.confirm == 'publish'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      # Each platform loaded and run here first; pushed only once both pass.
+      - name: Both images, built and checked
+        run: |
+          for arch in amd64 arm64; do
+            docker buildx build --platform "linux/$arch" --load -t "pdfkiln:$arch" -f docker/Dockerfile context
+            docker run --rm --platform "linux/$arch" "pdfkiln:$arch" wkhtmltopdf --version
+          done
+
+      - uses: docker/build-push-action@v7
+        id: push
+        if: inputs.confirm == 'publish'
+        with:
+          context: context
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:${{ steps.image.outputs.version }}
+            ${{ steps.image.outputs.name }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ steps.runs.outputs.sha }}
+            org.opencontainers.image.version=${{ steps.image.outputs.version }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.description=pdfkiln, a drop-in replacement for wkhtmltopdf, powered by Chromium
+
+      # GitHub attests in a private repository only with Enterprise Cloud.
+      - uses: actions/attest-build-provenance@v4
+        if: inputs.confirm == 'publish' && !github.event.repository.private
+        with:
+          subject-name: ${{ steps.image.outputs.name }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Summary
+        env:
+          NAME: ${{ steps.image.outputs.name }}
+          VERSION: ${{ steps.image.outputs.version }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$CONFIRM" = publish ]; then
+            echo "Pushed $NAME:$VERSION and $NAME:latest. A new package is private: make it public in its settings, once." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Dry run, nothing pushed: type "publish" in confirm to push the image.' | tee -a "$GITHUB_STEP_SUMMARY"
+          fi

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+
+<html dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Terres &amp; Émaux du Rhône SAS</title>
+<meta content="frappe" name="generator"/>
+<link href="http://127.0.0.1:8765/assets/frappe/dist/css/print.bundle.7DKZWKDD.css" rel="stylesheet" type="text/css"/>
+<style>
+		@media screen {
+	.print-format-gutter {
+		background-color: #d1d8dd;
+		padding: 30px 0px;
+	}
+	.print-format {
+		background-color: white;
+		border-radius: 8px;
+		max-width: 8.3in;
+		min-height: 11.69in;
+		padding: 0.75in;
+		margin: auto;
+		color: var(--gray-900);
+	}
+
+	.print-format.landscape {
+		max-width: 11.69in;
+		padding: 0.2in;
+	}
+
+	.page-break {
+		/* padding: 15px 0px; */
+		border-bottom: 1px dashed #888;
+	}
+
+	/* .page-break:first-child {
+		padding-top: 0px;
+	} */
+
+	.page-break:last-child {
+		border-bottom: 0px;
+	}
+
+	/* mozilla hack for images in table */
+	body:last-child .print-format td img {
+		width: 100% !important;
+	}
+
+	@media(max-width: 767px) {
+		.print-format {
+			padding: 0.2in;
+		}
+	}
+}
+
+@media print {
+	.print-format p {
+		margin-left: 1px;
+		margin-right: 1px;
+	}
+}
+
+.disabled-check {
+	color: #eee;
+}
+
+.data-field {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.data-field .value {
+	word-wrap: break-word;
+}
+
+.important .value {
+	font-size: 120%;
+	font-weight: bold;
+}
+
+.important label {
+	line-height: 1.8;
+	margin: 0px;
+}
+
+.table {
+	font-size: inherit;
+	margin: 20px 0px;
+}
+
+.checkbox-options {
+	columns: var(--checkbox-options-columns);
+}
+
+.square-image {
+	width: 100%;
+	height: 0;
+	padding: 50% 0;
+	background-size: contain;
+	/*background-size: cover;*/
+	background-repeat: no-repeat !important;
+	background-position: center center;
+	border-radius: 4px;
+}
+
+.print-item-image {
+	object-fit: contain;
+}
+
+.pdf-variables,
+.pdf-variable,
+.visible-pdf {
+	display: none !important;
+}
+
+.print-format {
+	font-size: 9pt;
+	font-family: Inter, "Helvetica Neue", Helvetica, Arial, "Open Sans", sans-serif;
+	-webkit-print-color-adjust:exact;
+}
+
+.page-break {
+	page-break-after: always;
+}
+
+.print-heading {
+	border-bottom: 1px solid #aaa;
+	margin-bottom: 10px;
+}
+
+.print-heading h2 {
+	margin: 0px;
+}
+.print-heading h4 {
+	margin-top: 5px;
+}
+
+table.no-border, table.no-border td {
+	border: 0px;
+}
+
+.print-format label {
+	/* wkhtmltopdf breaks label into multiple lines when it is inline-block */
+	display: block;
+	font-weight: 700;
+}
+
+.print-format img {
+	max-width: 100%;
+}
+
+.print-format table td > .primary:first-child {
+	font-weight: bold;
+}
+
+.print-format td, .print-format th {
+	vertical-align: top !important;
+	padding: 6px !important;
+}
+
+.print-format p {
+	margin: 3px 0px 3px;
+}
+
+.print-format table td pre {
+	white-space: normal;
+	word-break: normal;
+}
+
+table td div {
+	
+	/* needed to avoid partial cutting of text between page break in wkhtmltopdf */
+	page-break-inside: avoid !important;
+	
+}
+
+/* hack for webkit specific browser */
+@media (-webkit-min-device-pixel-ratio:0) {
+	thead, tfoot {
+		display: table-header-group;
+	}
+}
+
+[document-status] {
+	margin-bottom: 5mm;
+}
+
+.signature-img {
+	background: #fff;
+	border-radius: 3px;
+	margin-top: 5px;
+	max-height: 150px;
+}
+
+.print-format-preview [data-fieldtype="Table"] {
+	overflow: auto;
+}
+/*
+	common style for whole page
+	This should include:
+	+ page size related settings
+	+ font family settings
+	+ line spacing settings
+*/
+.print-format div,
+.print-format span,
+.print-format td,
+.print-format h1,
+.print-format h2,
+.print-format h3,
+.print-format h4 {
+	font-family: Georgia, serif;
+}
+
+/* classic format: for-test */
+		</style>
+</head>
+<body>
+<div class="action-banner print-hide">
+<a class="p-2" onclick="window.print();">
+			Print
+		</a>
+<a class="p-2" href="http://127.0.0.1:8765/api/method/frappe.utils.print_format.download_pdf?doctype=Purchase Invoice&amp;name=ACC-PINV-2026-00001&amp;format=Purchase Auditing Voucher&amp;letterhead=Atelier Kiln&amp;no_letterhead=False&amp;_lang=en&amp;key=None">
+			Get PDF
+		</a>
+</div>
+<div class="print-format-gutter">
+<div class="print-format">
+<div>
+<div class="letter-head"><table style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #1f4e79;">
+<tbody><tr>
+<td style="width: 50%; vertical-align: middle; padding-bottom: 6px;">
+<img alt="Atelier Kiln" src="http://127.0.0.1:8765/files/atelier-kiln-logo.png" style="height: 56px;"/>
+</td>
+<td style="width: 50%; vertical-align: middle; text-align: right; font-size: 10px; line-height: 1.45; color: #333; padding-bottom: 6px;">
+<strong style="font-size: 12px; color: #1f4e79;">Atelier Kiln SARL</strong><br/>
+			12 rue des Potiers, 69002 Lyon, France<br/>
+			+33 4 72 10 20 30 · contact@atelier-kiln.example<br/>
+			TVA intracommunautaire : FR12 912345678
+		</td>
+</tr>
+</tbody></table></div>
+<div class="print-heading">
+<h2>
+<div>Purchase Invoice</div>
+<small class="sub-heading">ACC-PINV-2026-00001</small>
+</h2>
+</div>
+<div class="row margin-bottom">
+<div class="col-xs-6">
+<table>
+<tbody><tr><td><strong>Supplier Name: </strong></td><td>Terres &amp; Émaux du Rhône SAS</td></tr>
+<tr><td><strong>Due Date: </strong></td><td>24/10/2026</td></tr>
+<tr><td><strong>Address: </strong></td><td>ZI des Vernes, 5 allée des Fours<br/>
+Saint-Priest<br/>
+69800<br/>France<br/>
+<br/>
+</td></tr>
+<tr><td><strong>Contact: </strong></td><td>Hugo Bernard</td></tr>
+<tr><td><strong>Mobile no: </strong> </td><td></td></tr>
+</tbody></table>
+</div>
+<div class="col-xs-6">
+<table>
+<tbody><tr><td><strong>Voucher No: </strong></td><td>ACC-PINV-2026-00001</td></tr>
+<tr><td><strong>Date: </strong></td><td>24/10/2026</td></tr>
+</tbody></table>
+</div>
+</div>
+<div class="margin-top margin-bottom">
+<table class="table table-bordered table-condensed">
+<tbody><tr>
+<th>SL</th>
+<th>Item Code</th>
+<th>Item Name</th>
+<th>UOM</th>
+<th>Received Qty.</th>
+<th>Rejected Qty</th>
+<th>Qty</th>
+<th>Basic Rate</th>
+<th>Amount</th>
+</tr>
+<tr>
+<td>1</td>
+<td>MAT-ARG-25</td>
+<td>Argile de grès chamottée, sac de 25 kg</td>
+<td>Kg</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>500.0</td>
+<td>1.38</td>
+<td>690.0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>MAT-POR-12</td>
+<td>Porcelaine de Limoges à tourner, pain de 12,5 kg</td>
+<td>Kg</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>3.4</td>
+<td>340.0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>MAT-EMA-BLP</td>
+<td>Émail bleu de Prusse 1280 °C, poudre</td>
+<td>Kg</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>10.0</td>
+<td>18.5</td>
+<td>185.0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>MAT-EMA-CEL</td>
+<td>Émail céladon 1280 °C, poudre</td>
+<td>Kg</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>10.0</td>
+<td>21.0</td>
+<td>210.0</td>
+</tr>
+<tr>
+<td>5</td>
+<td>MAT-EMA-SAB</td>
+<td>Émail sable moucheté 1280 °C, poudre</td>
+<td>Kg</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>5.0</td>
+<td>19.2</td>
+<td>96.0</td>
+</tr>
+<tr>
+<td>6</td>
+<td>MAT-EMA-TRA</td>
+<td>Émail transparent brillant 1280 °C, poudre</td>
+<td>Kg</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>15.0</td>
+<td>12.4</td>
+<td>186.0</td>
+</tr>
+<tr>
+<td>7</td>
+<td>MAT-OXY-COB</td>
+<td>Oxyde de cobalt, pot de 500 g</td>
+<td>Gram</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>500.0</td>
+<td>0.19</td>
+<td>95.0</td>
+</tr>
+<tr>
+<td>8</td>
+<td>MAT-KAO-25</td>
+<td>Kaolin lavé, sac de 25 kg</td>
+<td>Kg</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>50.0</td>
+<td>0.96</td>
+<td>48.0</td>
+</tr>
+</tbody></table>
+</div>
+<div class="row margin-bottom">
+<div class="col-xs-6">
+<table>
+<tbody><tr><td><strong>Total Quantity: </strong></td><td>1190.0</td></tr>
+<tr><td><strong>Total: </strong></td><td>1850.0</td></tr>
+<tr><td><strong>Net Weight: </strong></td><td>0.0</td></tr>
+</tbody></table>
+</div>
+<div class="col-xs-6">
+<table>
+<tbody><tr><td><strong>Tax and Charges: </strong></td><td>TVA déductible 20% - AK</td></tr>
+<tr><td><strong>TVA déductible 20% - AK: </strong></td><td>370.0</td></tr>
+<tr><td><strong> Taxes and Charges Added: </strong></td><td>370.0</td></tr>
+<tr><td><strong> Total Taxes and Charges: </strong></td><td>370.0</td></tr>
+<tr><td><strong> Net Payable: </strong></td><td>2220.0</td></tr>
+</tbody></table>
+</div>
+</div>
+<div class="margin-top">
+<table class="table table-bordered table-condensed">
+<tbody><tr>
+<th>SL</th>
+<th>Account</th>
+<th>Party Type</th>
+<th>Party</th>
+<th>Debit Amount</th>
+<th>Credit Amount</th>
+</tr>
+<tr>
+<td>1</td>
+<td>TVA déductible 20% - AK</td>
+<td>None</td>
+<td>None</td>
+<td>370.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Stock Received But Not Billed - AK</td>
+<td>None</td>
+<td>None</td>
+<td>1850.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Creditors - AK</td>
+<td>Supplier</td>
+<td>Terres &amp; Émaux du Rhône SAS</td>
+<td>0.0</td>
+<td>2220.0</td>
+</tr>
+<tr>
+<td colspan="4"><strong>Total</strong></td>
+<td>2220.0</td>
+<td>2220.0</td>
+</tr>
+</tbody></table>
+</div>
+</div>
+</div>
+</div>
+<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const page_div = document.querySelector('.page-break');
+
+			if (page_div) {
+				page_div.style.display = 'flex';
+				page_div.style.flexDirection = 'column';
+			}
+
+			const footer_html = document.getElementById('footer-html');
+			if (footer_html)  {
+				footer_html.classList.add('hidden-pdf');
+				footer_html.classList.remove('visible-pdf');
+				footer_html.style.order = 1;
+				footer_html.style.marginTop = '20px';
+			}
+		});
+	</script>
+</body><!-- Administrator --></html>

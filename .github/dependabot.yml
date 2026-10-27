@@ -1,0 +1,12 @@
+# Weekly updates of the other dependencies; Chromium has its own workflow
+# (chromium.yml).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

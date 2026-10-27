@@ -1,0 +1,53 @@
+{
+  "id": "odoo17-invoices-striped",
+  "title": "Odoo 17 two customer invoices printed together (two body files, 2 pages), Striped layout",
+  "app": "Odoo 17.0 Community",
+  "license": "LGPL-3.0-only",
+  "source": "https://github.com/odoo/odoo/blob/dca5cd22d40f25066919d722bf687be48c51b0ec/addons/account/views/report_invoice.xml",
+  "versioned": true,
+  "args": [
+    "--disable-local-file-access",
+    "--quiet",
+    "--page-size",
+    "A4",
+    "--margin-top",
+    "40.0",
+    "--dpi",
+    "90",
+    "--zoom",
+    "1.0666666666666667",
+    "--header-spacing",
+    "35",
+    "--margin-left",
+    "7.0",
+    "--margin-bottom",
+    "32.0",
+    "--margin-right",
+    "7.0",
+    "--orientation",
+    "Portrait",
+    "--javascript-delay",
+    "1000",
+    "--header-html",
+    "input/report.header.tmp.html",
+    "--footer-html",
+    "input/report.footer.tmp.html",
+    "input/report.body.tmp.0.html",
+    "input/report.body.tmp.1.html",
+    "{out}"
+  ],
+  "stdin": null,
+  "www": [
+    "www",
+    "../_shared/odoo17/www"
+  ],
+  "httpHeaders": {
+    "/web/assets/": {
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/web/static/": {
+      "Cache-Control": "public, max-age=604800"
+    }
+  },
+  "notes": "Captured from Odoo 17.0 Community (commit dca5cd22d40f) printing through HTTP /report/pdf with a logged-in session; Odoo passed `--cookie-jar <temp file>` (session cookie), that pair is removed. Temp file names lose only their random part. Origin http://127.0.0.1:8069 rewritten to http://127.0.0.1:8765 (in the <base href> of the 4 HTML files). httpHeaders are the Cache-Control values Odoo sends; without them wkhtmltopdf 0.12.6 draws the header and footer before their web fonts load and their text is missing (see SOURCE.md). Two records in one print: one body file per invoice (report.body.tmp.0 and .1), one header and one footer holding both records' headers and footers; Odoo's subst() script keeps those of the record whose index is in the page's file name. The files common to the Odoo entries are in ../_shared/odoo17/www."
+}

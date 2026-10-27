@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+
+<html dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Terres &amp; Émaux du Rhône SAS</title>
+<meta content="frappe" name="generator"/>
+<link href="http://127.0.0.1:8765/assets/frappe/dist/css/print.bundle.7DKZWKDD.css" rel="stylesheet" type="text/css"/>
+<style>
+		@media screen {
+	.print-format-gutter {
+		background-color: #d1d8dd;
+		padding: 30px 0px;
+	}
+	.print-format {
+		background-color: white;
+		border-radius: 8px;
+		max-width: 8.3in;
+		min-height: 11.69in;
+		padding: 0.75in;
+		margin: auto;
+		color: var(--gray-900);
+	}
+
+	.print-format.landscape {
+		max-width: 11.69in;
+		padding: 0.2in;
+	}
+
+	.page-break {
+		/* padding: 15px 0px; */
+		border-bottom: 1px dashed #888;
+	}
+
+	/* .page-break:first-child {
+		padding-top: 0px;
+	} */
+
+	.page-break:last-child {
+		border-bottom: 0px;
+	}
+
+	/* mozilla hack for images in table */
+	body:last-child .print-format td img {
+		width: 100% !important;
+	}
+
+	@media(max-width: 767px) {
+		.print-format {
+			padding: 0.2in;
+		}
+	}
+}
+
+@media print {
+	.print-format p {
+		margin-left: 1px;
+		margin-right: 1px;
+	}
+}
+
+.disabled-check {
+	color: #eee;
+}
+
+.data-field {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.data-field .value {
+	word-wrap: break-word;
+}
+
+.important .value {
+	font-size: 120%;
+	font-weight: bold;
+}
+
+.important label {
+	line-height: 1.8;
+	margin: 0px;
+}
+
+.table {
+	font-size: inherit;
+	margin: 20px 0px;
+}
+
+.checkbox-options {
+	columns: var(--checkbox-options-columns);
+}
+
+.square-image {
+	width: 100%;
+	height: 0;
+	padding: 50% 0;
+	background-size: contain;
+	/*background-size: cover;*/
+	background-repeat: no-repeat !important;
+	background-position: center center;
+	border-radius: 4px;
+}
+
+.print-item-image {
+	object-fit: contain;
+}
+
+.pdf-variables,
+.pdf-variable,
+.visible-pdf {
+	display: none !important;
+}
+
+.print-format {
+	font-size: 9pt;
+	font-family: Inter, "Helvetica Neue", Helvetica, Arial, "Open Sans", sans-serif;
+	-webkit-print-color-adjust:exact;
+}
+
+.page-break {
+	page-break-after: always;
+}
+
+.print-heading {
+	border-bottom: 1px solid #aaa;
+	margin-bottom: 10px;
+}
+
+.print-heading h2 {
+	margin: 0px;
+}
+.print-heading h4 {
+	margin-top: 5px;
+}
+
+table.no-border, table.no-border td {
+	border: 0px;
+}
+
+.print-format label {
+	/* wkhtmltopdf breaks label into multiple lines when it is inline-block */
+	display: block;
+	font-weight: 700;
+}
+
+.print-format img {
+	max-width: 100%;
+}
+
+.print-format table td > .primary:first-child {
+	font-weight: bold;
+}
+
+.print-format td, .print-format th {
+	vertical-align: top !important;
+	padding: 6px !important;
+}
+
+.print-format p {
+	margin: 3px 0px 3px;
+}
+
+.print-format table td pre {
+	white-space: normal;
+	word-break: normal;
+}
+
+table td div {
+	
+	/* needed to avoid partial cutting of text between page break in wkhtmltopdf */
+	page-break-inside: avoid !important;
+	
+}
+
+/* hack for webkit specific browser */
+@media (-webkit-min-device-pixel-ratio:0) {
+	thead, tfoot {
+		display: table-header-group;
+	}
+}
+
+[document-status] {
+	margin-bottom: 5mm;
+}
+
+.signature-img {
+	background: #fff;
+	border-radius: 3px;
+	margin-top: 5px;
+	max-height: 150px;
+}
+
+.print-format-preview [data-fieldtype="Table"] {
+	overflow: auto;
+}
+.print-format * {
+	color: #000 !important;
+}
+
+.print-format .alert {
+	background-color: inherit;
+	border: 1px dashed #333;
+}
+
+.print-format .table-bordered,
+.print-format .table-bordered > thead > tr > th,
+.print-format .table-bordered > tbody > tr > th,
+.print-format .table-bordered > tfoot > tr > th,
+.print-format .table-bordered > thead > tr > td,
+.print-format .table-bordered > tbody > tr > td,
+.print-format .table-bordered > tfoot > tr > td {
+	border: 1px solid #333;
+}
+
+.print-format hr {
+	border-top: 1px solid #333;
+}
+
+.print-heading {
+	border-bottom: 2px solid #333;
+}
+
+		</style>
+</head>
+<body>
+<div class="action-banner print-hide">
+<a class="p-2" onclick="window.print();">
+			Print
+		</a>
+<a class="p-2" href="http://127.0.0.1:8765/api/method/frappe.utils.print_format.download_pdf?doctype=Purchase Order&amp;name=PUR-ORD-2026-00001&amp;format=Standard&amp;letterhead=Atelier Kiln Achats&amp;no_letterhead=False&amp;_lang=en&amp;key=None">
+			Get PDF
+		</a>
+</div>
+<div class="print-format-gutter">
+<div class="print-format">
+<div class="page-break">
+<div class="row section-break" data-label="">
+<div class="col-xs-4 column-break">
+<div class="row important data-field" data-fieldname="supplier_name" data-fieldtype="Data">
+<div class="col-xs-12">
+<label>Supplier Name: </label>
+</div>
+<div class="col-xs-12 value">
+					Terres &amp; Émaux du Rhône SAS
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="transaction_date" data-fieldtype="Date">
+<div class="col-xs-12">
+<label>Date: </label>
+</div>
+<div class="col-xs-12 value">
+					14/10/2026
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="schedule_date" data-fieldtype="Date">
+<div class="col-xs-12">
+<label>Required By: </label>
+</div>
+<div class="col-xs-12 value">
+					05/11/2026
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-12 column-break">
+<div data-fieldname="items" data-fieldtype="Table">
+<table class="table table-bordered table-condensed">
+<thead>
+<tr>
+<th class="table-sr" style="width: 40px">Sr</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Finished Good Qty</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 150px;">
+							Item Code</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 300px;">
+							Description</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 60px;">
+							Quantity</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 100px;">
+							Stock UOM</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Subcontracted Quantity</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 100px;">
+							UOM</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Discount Amount</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Distributed Discount Amount</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Rate</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Amount</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Rate of Stock UOM</th>
+<th class="text-center" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Apply TDS</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Available Qty at Company</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Weight Per Unit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="table-sr">1</td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">MAT-ARG-25
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Argile de grès chamottée, sac de 25 kg</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Kg</small>
+	
+	500
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 1,38
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 690,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 1,38
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">2</td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">MAT-POR-12
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Porcelaine de Limoges à tourner, pain de 12,5 kg</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Kg</small>
+	
+	100
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 3,40
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 340,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 3,40
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">3</td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">MAT-EMA-BLP
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Émail bleu de Prusse 1280 °C, poudre</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Kg</small>
+	
+	10
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 18,50
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 185,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 18,50
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">4</td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">MAT-EMA-CEL
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Émail céladon 1280 °C, poudre</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Kg</small>
+	
+	10
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 21,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 210,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 21,00
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">5</td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">MAT-EMA-SAB
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Émail sable moucheté 1280 °C, poudre</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Kg</small>
+	
+	5
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 19,20
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 96,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 19,20
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">6</td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">MAT-EMA-TRA
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Émail transparent brillant 1280 °C, poudre</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Kg</small>
+	
+	15
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 12,40
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 186,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 12,40
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">7</td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">MAT-OXY-COB
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Oxyde de cobalt, pot de 500 g</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Gram</small>
+	
+	500
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Gram
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Gram
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,19
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 95,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,19
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+</tr>
+<tr>
+<td class="table-sr">8</td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">MAT-KAO-25
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Kaolin lavé, sac de 25 kg</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Kg</small>
+	
+	50
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Kg
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,96
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 48,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,96
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">0
+	</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="total_qty" data-fieldtype="Float">
+<div class="col-xs-12">
+<label>Total Quantity: </label>
+</div>
+<div class="col-xs-12 value">
+					1 190
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+</div>
+<div class="col-xs-4 column-break">
+<div class="row data-field">
+<div class="col-xs-5">
+<label>Total</label></div>
+<div class="col-xs-7 text-right value">
+			€ 1 850,00
+		</div>
+</div>
+<div class="row data-field" data-fieldname="tax_withholding_net_total" data-fieldtype="Currency">
+<div class="col-xs-12">
+<label>Tax Withholding Net Total: </label>
+</div>
+<div class="col-xs-12 value">
+					
+		€ 1 850,00
+	
+				</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-12 column-break">
+<div class="row">
+<div class="col-xs-6"></div>
+<div class="col-xs-6"><div class="row">
+<div class="col-xs-5">
+<label>TVA déductible 20 %</label>
+</div>
+<div class="col-xs-7 text-right">
+					€ 370,00
+				</div>
+</div></div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Totals">
+<div class="col-xs-6 column-break">
+</div>
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="grand_total" data-fieldtype="Currency">
+<div class="col-xs-5">
+<label>Grand Total: </label>
+</div>
+<div class="col-xs-7 text-right value">
+					
+		€ 2 220,00
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="rounded_total" data-fieldtype="Currency">
+<div class="col-xs-5">
+<label>Rounded Total: </label>
+</div>
+<div class="col-xs-7 text-right value">
+					
+		€ 2 220,00
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="in_words" data-fieldtype="Data">
+<div class="col-xs-5">
+<label>In Words: </label>
+</div>
+<div class="col-xs-7 value">
+					EUR Two Thousand, Two Hundred And Twenty only.
+	
+				</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Supplier Address">
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="address_display" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>Supplier Address Details: </label>
+</div>
+<div class="col-xs-7 value">
+					ZI des Vernes, 5 allée des Fours<br/>
+Saint-Priest<br/>
+69800<br/>France<br/>
+<br/>
+</div>
+</div>
+</div>
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="contact_display" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>Contact Name: </label>
+</div>
+<div class="col-xs-7 value">
+					Hugo Bernard
+	
+				</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Company Billing Address">
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="billing_address" data-fieldtype="Link">
+<div class="col-xs-12">
+<label>Company Billing Address: </label>
+</div>
+<div class="col-xs-12 value">
+					Atelier Kiln SARL-Billing
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="billing_address_display" data-fieldtype="Small Text">
+<div class="col-xs-12">
+<label>Billing Address Details: </label>
+</div>
+<div class="col-xs-12 value">
+					12 rue des Potiers<br/>
+Lyon<br/>
+69002<br/>France<br/>
+<br/>
+Phone: +33 4 72 10 20 30<br/>Email: contact@atelier-kiln.example<br/>
+</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="Terms &amp; Conditions">
+<div class="col-xs-12 column-break">
+<div data-fieldname="terms" data-fieldtype="Text Editor" style="padding: 10px 0px"><div class="ql-snow"><p>Livraison franco de port à l'atelier, quai 2, du lundi au vendredi de 8 h à 12 h. Chaque livraison est accompagnée d'un bon de livraison rappelant le numéro de commande. Les sacs d'argile endommagés ou humides sont refusés. Paiement à 45 jours fin de mois par virement, à réception d'une facture conforme.</p></div></div>
+</div>
+</div>
+<div class="row section-break" data-label="Additional Info">
+<div class="col-xs-6 column-break">
+</div>
+<div class="col-xs-6 column-break">
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const page_div = document.querySelector('.page-break');
+
+			if (page_div) {
+				page_div.style.display = 'flex';
+				page_div.style.flexDirection = 'column';
+			}
+
+			const footer_html = document.getElementById('footer-html');
+			if (footer_html)  {
+				footer_html.classList.add('hidden-pdf');
+				footer_html.classList.remove('visible-pdf');
+				footer_html.style.order = 1;
+				footer_html.style.marginTop = '20px';
+			}
+		});
+	</script>
+</body><!-- Administrator --></html>

@@ -1,0 +1,96 @@
+name: npm
+run-name: "npm from ci ${{ inputs.ci_run }}${{ inputs.confirm != 'publish' && ', dry run' || '' }}"
+
+# Stages the npm package of a green ci run on main, @pdfkiln/pdfkiln, as CI
+# built and tested it (scripts/npm.ts), never rebuilt. Run by hand only,
+# after the version's GitHub release (release.yml). CI keeps packages two
+# days: start the ci run on main first.
+#
+#   gh workflow run npm.yml -f ci_run=<id>                    dry run
+#   gh workflow run npm.yml -f ci_run=<id> -f confirm=publish
+#
+# No token: npm trusts this workflow (trusted publishing, OIDC), set in the
+# package's settings on npmjs.com for this repository and npm.yml. The
+# package is staged, not published: it goes live once a maintainer approves
+# it with 2FA (npmjs.com, Staged Packages, or npm stage approve). npm adds
+# the provenance attestation itself when the repository is public.
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run:
+        description: Run of the ci workflow on main
+        required: true
+      confirm:
+        description: Type "publish" to stage the package (otherwise, a dry run)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CI_RUN: ${{ inputs.ci_run }}
+    steps:
+      - name: The ci run
+        id: run
+        run: |
+          [[ "$CI_RUN" =~ ^[0-9]+$ ]] || { echo "::error::$CI_RUN is not a run id"; exit 1; }
+          read -r name branch conclusion sha <<< "$(gh run view "$CI_RUN" --repo "$GITHUB_REPOSITORY" \
+            --json workflowName,headBranch,conclusion,headSha --jq '[.workflowName, .headBranch, .conclusion, .headSha] | join(" ")')"
+          echo "ci $CI_RUN: $name, $branch, $conclusion, $sha"
+          [ "$name $branch $conclusion" = 'ci main success' ] || { echo "::error::$CI_RUN is not a green run of ci on main"; exit 1; }
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.run.outputs.sha }}
+
+      # Trusted publishing needs npm 11.5.1 or later, staging 11.15.0.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@11.21.1
+
+      # The package of the run's commit, under the release's name and
+      # version, which npm does not have yet.
+      - name: Package of the run
+        id: package
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          gh run download "$CI_RUN" --repo "$GITHUB_REPOSITORY" --name package-ubuntu-24.04 --dir from
+          tgz="from/pdfkiln-pdfkiln-$version.tgz"
+          test -f "$tgz" || { echo "::error::no $tgz in the run"; ls from; exit 1; }
+          tar -xzOf "$tgz" package/package.json > packed.json
+          test "$(node -p "const p = require('./packed.json'); p.name + ' ' + p.version")" = "@pdfkiln/pdfkiln $version"
+          if [ -n "$(npm view "@pdfkiln/pdfkiln@$version" version 2> /dev/null)" ]; then
+            echo "::error::@pdfkiln/pdfkiln@$version is on npm already"; exit 1
+          fi
+          sha256sum "$tgz"
+          echo "tgz=$tgz" >> "$GITHUB_OUTPUT"
+
+      - name: Stage
+        if: inputs.confirm == 'publish'
+        env:
+          TGZ: ${{ steps.package.outputs.tgz }}
+        run: |
+          npm stage publish "$TGZ" --access public
+          echo 'Staged: approve it on npmjs.com (Staged Packages) or with npm stage approve.' | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Dry run
+        if: inputs.confirm != 'publish'
+        run: |
+          echo 'Dry run, nothing staged: type "publish" in confirm to stage the package.' | tee -a "$GITHUB_STEP_SUMMARY"

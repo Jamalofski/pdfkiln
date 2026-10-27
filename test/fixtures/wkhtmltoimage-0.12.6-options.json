@@ -1,0 +1,320 @@
+{
+ "source": "wkhtmltoimage 0.12.6 (with patched qt) --extended-help, in its order",
+ "options": [
+  {
+   "name": "allow",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "bypass-proxy-for",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "cache-dir",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "checkbox-checked-svg",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "checkbox-svg",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "cookie",
+   "short": null,
+   "argn": 2
+  },
+  {
+   "name": "cookie-jar",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "crop-h",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "crop-w",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "crop-x",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "crop-y",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "custom-header",
+   "short": null,
+   "argn": 2
+  },
+  {
+   "name": "custom-header-propagation",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "no-custom-header-propagation",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "debug-javascript",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "no-debug-javascript",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "encoding",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "extended-help",
+   "short": "H",
+   "argn": 0
+  },
+  {
+   "name": "format",
+   "short": "f",
+   "argn": 1
+  },
+  {
+   "name": "height",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "help",
+   "short": "h",
+   "argn": 0
+  },
+  {
+   "name": "htmldoc",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "images",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "no-images",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "disable-javascript",
+   "short": "n",
+   "argn": 0
+  },
+  {
+   "name": "enable-javascript",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "javascript-delay",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "license",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "load-error-handling",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "load-media-error-handling",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "disable-local-file-access",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "enable-local-file-access",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "log-level",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "manpage",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "minimum-font-size",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "password",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "disable-plugins",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "enable-plugins",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "post",
+   "short": null,
+   "argn": 2
+  },
+  {
+   "name": "post-file",
+   "short": null,
+   "argn": 2
+  },
+  {
+   "name": "proxy",
+   "short": "p",
+   "argn": 1
+  },
+  {
+   "name": "proxy-hostname-lookup",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "quality",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "quiet",
+   "short": "q",
+   "argn": 0
+  },
+  {
+   "name": "radiobutton-checked-svg",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "radiobutton-svg",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "readme",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "run-script",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "disable-smart-width",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "enable-smart-width",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "ssl-crt-path",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "ssl-key-password",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "ssl-key-path",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "stop-slow-scripts",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "no-stop-slow-scripts",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "transparent",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "use-xserver",
+   "short": null,
+   "argn": 0
+  },
+  {
+   "name": "user-style-sheet",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "username",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "version",
+   "short": "V",
+   "argn": 0
+  },
+  {
+   "name": "width",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "window-status",
+   "short": null,
+   "argn": 1
+  },
+  {
+   "name": "zoom",
+   "short": null,
+   "argn": 1
+  }
+ ]
+}

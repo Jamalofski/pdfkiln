@@ -1,0 +1,118 @@
+name: apt
+
+# Publishes the Debian packages of two CI runs (ci.yml for amd64,
+# arm64.yml for arm64) to the APT repository, an S3 bucket on OVHcloud
+# Object Storage (packaging/apt/README.md). Run by hand only, and only with
+# "publish" typed in: with release.yml, npm.yml and docker.yml, the only
+# workflows that publish.
+# CI keeps packages two days: start both runs by hand on main first.
+#
+# Secrets: APT_GPG_KEY (the signing subkey, armored), APT_GPG_PASSPHRASE,
+# APT_S3_ACCESS_KEY, APT_S3_SECRET_KEY. Variables: APT_S3_BUCKET,
+# APT_S3_REGION, APT_S3_ENDPOINT, APT_URL (the repository's public URL).
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run:
+        description: Run of the ci workflow whose amd64 package to publish
+        required: true
+      arm64_run:
+        description: Run of the arm64 workflow whose arm64 package to publish
+        required: true
+      confirm:
+        description: Type "publish"
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: apt
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: inputs.confirm == 'publish'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.APT_S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.APT_S3_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.APT_S3_REGION }}
+      # The checksums newer AWS CLIs add by default, which S3-compatible
+      # stores may refuse.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      BUCKET: s3://${{ vars.APT_S3_BUCKET }}
+      ENDPOINT: ${{ vars.APT_S3_ENDPOINT }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Packages of the two runs
+        run: |
+          gh run download ${{ inputs.ci_run }} --name package-ubuntu-24.04 --dir runs/amd64
+          gh run download ${{ inputs.arm64_run }} --name package-linux-arm64 --dir runs/arm64
+          mkdir debs
+          mv runs/*/pdfkiln_*.deb debs/
+          ls -l debs
+          # Released packages bring the repository with them.
+          for deb in debs/*.deb; do
+            dpkg-deb --contents "$deb" | grep -q ' ./etc/apt/sources.list.d/pdfkiln.sources$' || { echo "$deb has no APT source"; exit 1; }
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Signing key
+        run: |
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -m 700 "$GNUPGHOME"
+          echo "GNUPGHOME=$GNUPGHOME" >> "$GITHUB_ENV"
+          printf '%s\n' "$APT_GPG_KEY" | gpg --batch --import
+          echo "FPR=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/ { print $10; exit }')" >> "$GITHUB_ENV"
+        env:
+          APT_GPG_KEY: ${{ secrets.APT_GPG_KEY }}
+
+      # The bucket is the repository: copied down, added to, signed, and
+      # copied back packages first, index next, removals last, so that apt
+      # never reads an index whose packages are missing.
+      - name: Repository, updated and signed
+        run: |
+          aws s3 sync "$BUCKET" repo --endpoint-url "${ENDPOINT%/}" --only-show-errors
+          node dist/scripts/apt.js --repo repo --key "$FPR" debs/*.deb
+        env:
+          APT_GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
+
+      - name: Upload
+        run: |
+          aws s3 sync repo/pool "$BUCKET/pool" --endpoint-url "${ENDPOINT%/}" --acl public-read \
+            --cache-control 'public, max-age=31536000, immutable' --only-show-errors
+          aws s3 sync repo/dists "$BUCKET/dists" --endpoint-url "${ENDPOINT%/}" --acl public-read \
+            --cache-control 'public, max-age=300' --delete --only-show-errors
+          aws s3 cp repo/pdfkiln-archive-keyring.asc "$BUCKET/pdfkiln-archive-keyring.asc" --endpoint-url "${ENDPOINT%/}" --acl public-read
+          aws s3 sync repo/pool "$BUCKET/pool" --endpoint-url "${ENDPOINT%/}" --delete --only-show-errors
+
+      # APT_URL is the address the packages carry (packaging/apt/repository.json):
+      # apt.pdfkiln.org, a CDN that keeps the index 5 minutes; waited for
+      # until it serves the index just signed.
+      - name: Published index, checked from its public URL
+        run: |
+          test "${APT_URL%/}" = "$(node -p "require('./packaging/apt/repository.json').url")"
+          for i in $(seq 1 16); do
+            curl -fsS "${APT_URL%/}/dists/stable/InRelease" -o InRelease && cmp -s InRelease repo/dists/stable/InRelease && break
+            sleep 30
+          done
+          cmp InRelease repo/dists/stable/InRelease
+          gpg --export "$FPR" > key.gpg
+          gpgv --keyring "$PWD/key.gpg" InRelease
+          grep -E '^ [0-9a-f]{64} ' InRelease | head -n 4
+        env:
+          APT_URL: ${{ vars.APT_URL }}

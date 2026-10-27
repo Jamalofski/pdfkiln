@@ -1,0 +1,113 @@
+name: bench
+
+# The prototype measurements: wkhtmltopdf 0.12.6 against the Chromium
+# prototype, on Ubuntu and Windows. Run by hand only:
+# those measurements are done, the command's benches run in ci.yml, and the
+# prototype prints one page object, which some corpus entries no longer are.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    env:
+      PDFKILN_PYTHON: python
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Fonts and wkhtmltopdf libraries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-liberation fonts-dejavu-core \
+            fontconfig libjpeg-turbo8 libxrender1 libxext6 xfonts-75dpi xfonts-base
+
+      - uses: actions/cache@v6
+        with:
+          path: .cache/downloads
+          key: downloads-${{ runner.os }}-${{ hashFiles('chromium.json', 'bench/wkhtmltopdf.json') }}
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run fetch:chromium
+      - run: npm run fetch:wkhtmltopdf
+      - run: pip install -r bench/requirements.txt
+
+      # Ubuntu 24.04 keeps unprivileged user namespaces from unconfined
+      # programs (kernel.apparmor_restrict_unprivileged_userns); Chromium's
+      # sandbox needs them. The fix is an AppArmor profile for the binary, as
+      # Ubuntu ships for Chrome: the sandbox stays on.
+      - name: Chromium sandbox (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p bench/out
+          restrict="$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null || echo unset)"
+          if node dist/bench/sandbox.js > bench/out/sandbox.json; then
+            profile=false
+          else
+            exe="$(node dist/scripts/fetch-chromium.js)"
+            printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile pdfkiln-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$exe" \
+              | sudo tee /etc/apparmor.d/pdfkiln-chromium
+            sudo apparmor_parser -r /etc/apparmor.d/pdfkiln-chromium
+            node dist/bench/sandbox.js > bench/out/sandbox.json
+            profile=true
+          fi
+          node -e "const f='bench/out/sandbox.json', r=JSON.parse(require('fs').readFileSync(f)); r.apparmorRestrictUserns='$restrict'; r.apparmorProfileNeeded=$profile; require('fs').writeFileSync(f, JSON.stringify(r))"
+          cat bench/out/sandbox.json
+
+      - name: Chromium sandbox (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir -p bench/out
+          node dist/bench/sandbox.js > bench/out/sandbox.json
+          cat bench/out/sandbox.json
+        shell: bash
+
+      - name: 'Measure 2: complete call'
+        run: |
+          node dist/bench/startup.js --runs 15 --delay 200
+          node dist/bench/startup.js --runs 15
+
+      - name: 'Measure 3: header-html on 100 pages'
+        run: node dist/bench/header.js --runs 3
+
+      - name: 'Measure 4: generateDocumentOutline'
+        run: node dist/bench/outline.js
+
+      - name: 'Measure 1: corpus and scale factor'
+        run: node dist/bench/corpus.js --scales 0.70:1.00:0.02 --compare 1,0.8
+
+      - name: Summary
+        if: always()
+        run: |
+          node dist/bench/summarize.js
+          cat bench/out/summary.md >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: bench-${{ matrix.os }}
+          path: bench/out
+          retention-days: 30

@@ -1,0 +1,44 @@
+{
+  "id": "erpnext15-payment-entry",
+  "title": "ERPNext 15 payment entry, Bank and Cash Payment Voucher format, font size 12, letter head in the page, A4, 1 page",
+  "app": "Frappe 15.124.0 + ERPNext 15.124.1",
+  "license": "MIT AND GPL-3.0-only AND BSD-3-Clause",
+  "source": "https://github.com/frappe/erpnext/blob/4e0dce9ea8d351cd7023ad5ed66faf3cdec0680e/erpnext/accounts/print_format/bank_and_cash_payment_voucher/bank_and_cash_payment_voucher.html",
+  "versioned": true,
+  "args": [
+    "--print-media-type",
+    "--background",
+    "--images",
+    "--quiet",
+    "--encoding",
+    "UTF-8",
+    "--margin-right",
+    "15mm",
+    "--margin-left",
+    "15mm",
+    "--margin-top",
+    "15mm",
+    "--margin-bottom",
+    "15mm",
+    "--page-size",
+    "A4",
+    "--disable-javascript",
+    "--disable-local-file-access",
+    "--disable-smart-shrinking",
+    "-",
+    "{out}"
+  ],
+  "stdin": "input/page.html",
+  "www": [
+    "../_shared/erpnext15/www"
+  ],
+  "httpHeaders": {
+    "/assets/": {
+      "Cache-Control": "max-age=43200, public"
+    },
+    "/files/": {
+      "Cache-Control": "max-age=43200, public"
+    }
+  },
+  "notes": "Payment Entry ACC-PAY-2026-00001, made with `erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry` for Purchase Invoice ACC-PINV-2026-00001 and submitted: type Pay, 2 220.00 EUR from the bank ledger \"Crédit Lyonnais 512100 - AK\" to \"Creditors - AK\" for supplier Terres & Émaux du Rhône SAS, mode of payment Wire Transfer, reference VIR-2026-1028 of 2026-10-23. ERPNext wrote the remarks (narration) itself. Print Settings: print style Redesign, PDF page size A4, font size 12 (`standard.css` sets `font-size: 12pt` instead of 9pt on the print format); other settings as the defaults. Letter Head Atelier Kiln (the default one of `erpnext15-sales-invoice`): HTML header (logo `/files/atelier-kiln-logo.png` and company address) and HTML footer (legal mentions, bank details). Only its header is printed: this format does not render the letter head footer. Captured from Frappe 15.124.0 (commit f1cf50cf9bbc) + ERPNext 15.124.1 (commit 4e0dce9ea8d3), printed through HTTP /api/method/frappe.utils.print_format.download_pdf with a logged-in session, as the print view's PDF button does. Frappe (pdfkit 1.0.0) pipes the page on stdin and reads the PDF from stdout: `-` `-` at the end; the output `-` is replaced by {out}. Frappe passed `--cookie-jar /tmp/<random>.jar` (session cookie sid); that pair is removed. The page has no #header-html / #footer-html block, so Frappe passes no header or footer page and adds `--margin-top 15mm --margin-bottom 15mm`; there are no page numbers. Origin http://127.0.0.1:8000 rewritten to http://127.0.0.1:8765 in input/page.html (no www/ file contained it). www lists the entry's own files (if any) then corpus/_shared/erpnext15/www (print CSS print.bundle.7DKZWKDD.css, same content as H34JAH53 of the first two ERPNext entries but for three comments, and the Atelier Kiln logo). httpHeaders are the Cache-Control values the Frappe server sent. The print CSS has no @font-face: the text relies on fonts installed on the machine. ERPNext parts are GPL-3.0; Frappe parts are MIT; the print CSS also bundles Bootstrap 3.3.1, normalize.css and HTML5 Boilerplate (MIT) and Quill 2.0.3 CSS (BSD-3-Clause); letter heads, images and business data were written for the corpus. See SOURCE.md."
+}

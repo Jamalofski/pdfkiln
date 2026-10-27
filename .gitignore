@@ -1,0 +1,19 @@
+node_modules/
+/dist/
+/coverage/
+*.log
+*.tgz
+
+# Downloaded browsers and reference binaries
+.cache/
+
+# Benchmark output
+bench/out/
+
+# Local settings
+.env
+.env.*
+
+# Build output of the .NET test caller
+test/rotativa/bin/
+test/rotativa/obj/

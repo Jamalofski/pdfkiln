@@ -1,0 +1,5 @@
+#!/usr/bin/env php
+<?php
+// vendor/bin/pdfkiln: pdfkiln's pdfkiln, downloaded on first use.
+require_once __DIR__ . '/../src/launch.php';
+exit(\Pdfkiln\launch('pdfkiln', array_slice($argv, 1)));

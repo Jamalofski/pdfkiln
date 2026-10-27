@@ -1,0 +1,44 @@
+{
+  "id": "erpnext15-purchase-invoice",
+  "title": "ERPNext 15 purchase invoice, Purchase Auditing Voucher format, Classic print style, letter head in the page, A4, 2 pages",
+  "app": "Frappe 15.124.0 + ERPNext 15.124.1",
+  "license": "MIT AND GPL-3.0-only AND BSD-3-Clause",
+  "source": "https://github.com/frappe/erpnext/blob/4e0dce9ea8d351cd7023ad5ed66faf3cdec0680e/erpnext/accounts/print_format/purchase_auditing_voucher/purchase_auditing_voucher.html",
+  "versioned": true,
+  "args": [
+    "--print-media-type",
+    "--background",
+    "--images",
+    "--quiet",
+    "--encoding",
+    "UTF-8",
+    "--margin-right",
+    "15mm",
+    "--margin-left",
+    "15mm",
+    "--margin-top",
+    "15mm",
+    "--margin-bottom",
+    "15mm",
+    "--page-size",
+    "A4",
+    "--disable-javascript",
+    "--disable-local-file-access",
+    "--disable-smart-shrinking",
+    "-",
+    "{out}"
+  ],
+  "stdin": "input/page.html",
+  "www": [
+    "../_shared/erpnext15/www"
+  ],
+  "httpHeaders": {
+    "/assets/": {
+      "Cache-Control": "max-age=43200, public"
+    },
+    "/files/": {
+      "Cache-Control": "max-age=43200, public"
+    }
+  },
+  "notes": "Purchase Invoice ACC-PINV-2026-00001, made from Purchase Order PUR-ORD-2026-00001 (`erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice`) and submitted; posting date 2026-10-22, supplier invoice TER-F-26-08812 of 2026-10-21, the same 8 lines, net 1 850.00 EUR, VAT 370.00, total 2 220.00. It was printed before the payment of `erpnext15-payment-entry`. The voucher prints the creation date (\"Date: 24/10/2026\" in the site's time zone) and the due date ERPNext set at submission. Print Settings: print style Classic, PDF page size A4; other settings as the defaults. Letter Head Atelier Kiln (the default one of `erpnext15-sales-invoice`): HTML header (logo `/files/atelier-kiln-logo.png` and company address) and HTML footer (legal mentions, bank details). Only its header is printed: this format does not render the letter head footer. Captured from Frappe 15.124.0 (commit f1cf50cf9bbc) + ERPNext 15.124.1 (commit 4e0dce9ea8d3), printed through HTTP /api/method/frappe.utils.print_format.download_pdf with a logged-in session, as the print view's PDF button does. Frappe (pdfkit 1.0.0) pipes the page on stdin and reads the PDF from stdout: `-` `-` at the end; the output `-` is replaced by {out}. Frappe passed `--cookie-jar /tmp/<random>.jar` (session cookie sid); that pair is removed. The page has no #header-html / #footer-html block, so Frappe passes no header or footer page and adds `--margin-top 15mm --margin-bottom 15mm`; there are no page numbers. Origin http://127.0.0.1:8000 rewritten to http://127.0.0.1:8765 in input/page.html (no www/ file contained it). www lists the entry's own files (if any) then corpus/_shared/erpnext15/www (print CSS print.bundle.7DKZWKDD.css, same content as H34JAH53 of the first two ERPNext entries but for three comments, and the Atelier Kiln logo). httpHeaders are the Cache-Control values the Frappe server sent. The print CSS has no @font-face: the text relies on fonts installed on the machine. ERPNext parts are GPL-3.0; Frappe parts are MIT; the print CSS also bundles Bootstrap 3.3.1, normalize.css and HTML5 Boilerplate (MIT) and Quill 2.0.3 CSS (BSD-3-Clause); letter heads, images and business data were written for the corpus. See SOURCE.md."
+}

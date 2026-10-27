@@ -1,0 +1,36 @@
+name: Rendering difference
+description: A page that pdfkiln renders differently from wkhtmltopdf 0.12.6
+labels: [rendering]
+body:
+  - type: markdown
+    attributes:
+      value: Without the HTML and both PDFs, a difference cannot be reproduced. Remove anything private from the files first.
+  - type: textarea
+    id: command
+    attributes:
+      label: Command line
+      description: The exact arguments, as your application passes them (pdfkit, knp-snappy, wicked_pdf... can log them).
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Files
+      description: Attach the HTML (with its CSS, images and fonts, or a zip), the PDF from wkhtmltopdf 0.12.6 and the PDF from pdfkiln.
+    validations:
+      required: true
+  - type: textarea
+    id: difference
+    attributes:
+      label: What differs
+      description: Page count, page breaks, sizes, missing text, header or footer...
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions and system
+      description: Output of `wkhtmltopdf --version` for both, and the operating system.
+    validations:
+      required: true

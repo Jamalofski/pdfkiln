@@ -1,0 +1,5 @@
+#!/usr/bin/env php
+<?php
+// vendor/bin/wkhtmltoimage: pdfkiln's wkhtmltoimage, downloaded on first use.
+require_once __DIR__ . '/../src/launch.php';
+exit(\Pdfkiln\launch('wkhtmltoimage', array_slice($argv, 1)));

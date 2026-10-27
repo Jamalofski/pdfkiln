@@ -1,0 +1,45 @@
+{
+  "name": "pdfkiln",
+  "version": "1.0.2",
+  "private": true,
+  "description": "Drop-in replacement for wkhtmltopdf, powered by Chromium",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "pdfkiln": "dist/bundle/pdfkiln.cjs",
+    "wkhtmltopdf": "dist/bundle/wkhtmltopdf.cjs",
+    "wkhtmltoimage": "dist/bundle/wkhtmltoimage.cjs"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "fetch:chromium": "node dist/scripts/fetch-chromium.js",
+    "fetch:wkhtmltopdf": "node dist/scripts/fetch-wkhtmltopdf.js",
+    "render": "node dist/src/proto-cli.js",
+    "bench:corpus": "node dist/bench/corpus.js",
+    "bench:startup": "node dist/bench/startup.js",
+    "bench:header": "node dist/bench/header.js",
+    "bench:outline": "node dist/bench/outline.js",
+    "bench:sandbox": "node dist/bench/sandbox.js",
+    "bench:summary": "node dist/bench/summarize.js",
+    "test": "node --test dist/test/*.test.js",
+    "bench:compat": "node dist/bench/compat.js",
+    "bench:image": "node dist/bench/image.js",
+    "bundle": "node dist/scripts/bundle.js",
+    "bench:call": "node dist/bench/call.js",
+    "sea": "node dist/scripts/sea.js",
+    "package": "node dist/scripts/package.js"
+  },
+  "dependencies": {
+    "@cantoo/pdf-lib": "2.11.1",
+    "puppeteer-core": "25.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "esbuild": "0.28.2",
+    "postject": "1.0.0-alpha.6",
+    "typescript": "7.0.2"
+  }
+}

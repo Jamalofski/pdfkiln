@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+
+<html dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Boulangerie Dupont &amp; Fils</title>
+<meta content="frappe" name="generator"/>
+<link href="http://127.0.0.1:8765/assets/frappe/dist/css/print.bundle.H34JAH53.css" rel="stylesheet" type="text/css"/>
+<style>
+		@media screen {
+	.print-format-gutter {
+		background-color: #d1d8dd;
+		padding: 30px 0px;
+	}
+	.print-format {
+		background-color: white;
+		border-radius: 8px;
+		max-width: 8.3in;
+		min-height: 11.69in;
+		padding: 0.75in;
+		margin: auto;
+		color: var(--gray-900);
+	}
+
+	.print-format.landscape {
+		max-width: 11.69in;
+		padding: 0.2in;
+	}
+
+	.page-break {
+		/* padding: 15px 0px; */
+		border-bottom: 1px dashed #888;
+	}
+
+	/* .page-break:first-child {
+		padding-top: 0px;
+	} */
+
+	.page-break:last-child {
+		border-bottom: 0px;
+	}
+
+	/* mozilla hack for images in table */
+	body:last-child .print-format td img {
+		width: 100% !important;
+	}
+
+	@media(max-width: 767px) {
+		.print-format {
+			padding: 0.2in;
+		}
+	}
+}
+
+@media print {
+	.print-format p {
+		margin-left: 1px;
+		margin-right: 1px;
+	}
+}
+
+.disabled-check {
+	color: #eee;
+}
+
+.data-field {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.data-field .value {
+	word-wrap: break-word;
+}
+
+.important .value {
+	font-size: 120%;
+	font-weight: bold;
+}
+
+.important label {
+	line-height: 1.8;
+	margin: 0px;
+}
+
+.table {
+	font-size: inherit;
+	margin: 20px 0px;
+}
+
+.checkbox-options {
+	columns: var(--checkbox-options-columns);
+}
+
+.square-image {
+	width: 100%;
+	height: 0;
+	padding: 50% 0;
+	background-size: contain;
+	/*background-size: cover;*/
+	background-repeat: no-repeat !important;
+	background-position: center center;
+	border-radius: 4px;
+}
+
+.print-item-image {
+	object-fit: contain;
+}
+
+.pdf-variables,
+.pdf-variable,
+.visible-pdf {
+	display: none !important;
+}
+
+.print-format {
+	font-size: 9pt;
+	font-family: Inter, "Helvetica Neue", Helvetica, Arial, "Open Sans", sans-serif;
+	-webkit-print-color-adjust:exact;
+}
+
+.page-break {
+	page-break-after: always;
+}
+
+.print-heading {
+	border-bottom: 1px solid #aaa;
+	margin-bottom: 10px;
+}
+
+.print-heading h2 {
+	margin: 0px;
+}
+.print-heading h4 {
+	margin-top: 5px;
+}
+
+table.no-border, table.no-border td {
+	border: 0px;
+}
+
+.print-format label {
+	/* wkhtmltopdf breaks label into multiple lines when it is inline-block */
+	display: block;
+	font-weight: 700;
+}
+
+.print-format img {
+	max-width: 100%;
+}
+
+.print-format table td > .primary:first-child {
+	font-weight: bold;
+}
+
+.print-format td, .print-format th {
+	vertical-align: top !important;
+	padding: 6px !important;
+}
+
+.print-format p {
+	margin: 3px 0px 3px;
+}
+
+.print-format table td pre {
+	white-space: normal;
+	word-break: normal;
+}
+
+table td div {
+	
+	/* needed to avoid partial cutting of text between page break in wkhtmltopdf */
+	page-break-inside: avoid !important;
+	
+}
+
+/* hack for webkit specific browser */
+@media (-webkit-min-device-pixel-ratio:0) {
+	thead, tfoot {
+		display: table-header-group;
+	}
+}
+
+[document-status] {
+	margin-bottom: 5mm;
+}
+
+.signature-img {
+	background: #fff;
+	border-radius: 3px;
+	margin-top: 5px;
+	max-height: 150px;
+}
+
+.print-format-preview [data-fieldtype="Table"] {
+	overflow: auto;
+}
+.print-format {
+    font-size: 13px;
+    background: white;
+}
+
+.print-heading {
+    border-bottom: 1px solid #f4f5f6;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.print-heading h2 {
+    font-size: 24px;
+}
+
+.print-heading h2 div {
+    font-weight: 600;
+}
+
+.print-heading small {
+    font-size: 13px !important;
+    font-weight: normal;
+    line-height: 2.5;
+    color: #4c5a67;
+}
+
+.print-format .letter-head {
+    margin-bottom: 30px;
+}
+
+.print-format label {
+    font-weight: normal;
+    font-size: 13px;
+    color: #4C5A67;
+    margin-bottom: 0;
+}
+
+.print-format .data-field {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.print-format .value {
+    color: #192734;
+    line-height: 1.8;
+}
+
+.print-format .section-break:not(:last-child) {
+    margin-bottom: 0;
+}
+
+.print-format .row:not(.section-break) {
+    line-height: 1.6;
+    margin-top: 15px !important;
+}
+
+.print-format .important .value {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.print-format th {
+    color: #74808b;
+    font-weight: normal;
+    border-bottom-width: 1px !important;
+}
+
+.print-format .table-bordered td, .print-format .table-bordered th {
+    border: 1px solid #f4f5f6;
+}
+
+.print-format .table-bordered {
+    border: 1px solid #f4f5f6;
+}
+
+.print-format td, .print-format th {
+    padding: 10px !important;
+}
+
+.print-format .primary.compact-item {
+    font-weight: normal;
+}
+
+.print-format table td .value {
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+		</style>
+</head>
+<body>
+<div class="action-banner print-hide">
+<a class="p-2" onclick="window.print();">
+			Print
+		</a>
+<a class="p-2" href="http://127.0.0.1:8765/api/method/frappe.utils.print_format.download_pdf?doctype=Sales Invoice&amp;name=ACC-SINV-2026-00001&amp;format=Standard&amp;letterhead=Atelier Kiln&amp;no_letterhead=False&amp;_lang=en&amp;key=None">
+			Get PDF
+		</a>
+</div>
+<div class="print-format-gutter">
+<div class="print-format">
+<div class="page-break">
+<div class="row section-break" data-label="">
+<div class="col-xs-4 column-break">
+<div class="row important data-field" data-fieldname="customer_name" data-fieldtype="Small Text">
+<div class="col-xs-12">
+<label>Customer Name: </label>
+</div>
+<div class="col-xs-12 value">
+					Boulangerie Dupont &amp; Fils
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="tax_id" data-fieldtype="Data">
+<div class="col-xs-12">
+<label>Tax Id: </label>
+</div>
+<div class="col-xs-12 value">
+					FR45 523456789
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="company_tax_id" data-fieldtype="Data">
+<div class="col-xs-12">
+<label>Company Tax ID: </label>
+</div>
+<div class="col-xs-12 value">
+					FR12912345678
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+<div class="row important data-field" data-fieldname="posting_date" data-fieldtype="Date">
+<div class="col-xs-12">
+<label>Posting Date: </label>
+</div>
+<div class="col-xs-12 value">
+					20/10/2026
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="due_date" data-fieldtype="Date">
+<div class="col-xs-12">
+<label>Payment Due Date: </label>
+</div>
+<div class="col-xs-12 value">
+					30/11/2026
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="update_billed_amount_in_delivery_note" data-fieldtype="Check">
+<div class="col-xs-9">
+<label>Update Billed Amount in Delivery Note: </label>
+</div>
+<div class="col-xs-3 value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-12 column-break">
+<div data-fieldname="items" data-fieldtype="Table">
+<table class="table table-bordered table-condensed">
+<thead>
+<tr>
+<th class="table-sr" style="width: 40px">Sr</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 150px;">
+							Item</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 200px;">
+							Description</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Quantity</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 150px;">
+							Stock UOM</th>
+<th class="" data-fieldname="items" data-fieldtype="Table" style="width: 150px;">
+							UOM</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Discount Amount</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Distributed Discount Amount</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Rate</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Amount</th>
+<th class="text-right" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Rate of Stock UOM</th>
+<th class="text-center" data-fieldname="items" data-fieldtype="Table" style="width: 80px;">
+							Grant Commission</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="table-sr">1</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">CER-BOL-12
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Bol en grès émaillé 12 cm, bleu de Prusse</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	24
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 14,50
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 348,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 14,50
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+</tr>
+<tr>
+<td class="table-sr">2</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">CER-BOL-15
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Bol en grès émaillé 15 cm, bleu de Prusse</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	24
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 17,90
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 429,60
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 17,90
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+</tr>
+<tr>
+<td class="table-sr">3</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">SRV-PER-01
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Personnalisation : gravure du logo client sur pièce</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	120
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 4,50
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 540,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 4,50
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+</tr>
+<tr>
+<td class="table-sr">4</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">SRV-EMB-01
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Emballage renforcé et calage pour transport</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	1
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 35,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 35,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 35,00
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+</tr>
+<tr>
+<td class="table-sr">5</td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">SRV-LIV-01
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value"><div class="ql-snow">Livraison et installation, région lyonnaise</div>
+</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<small class="pull-left">Nos</small>
+	
+	1
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="" data-fieldname="items" data-fieldtype="Table">
+<div class="value">Nos
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 0,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 85,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 85,00
+	</div></td>
+<td class="text-right" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+		€ 85,00
+	</div></td>
+<td class="text-center" data-fieldname="items" data-fieldtype="Table">
+<div class="value">
+<!-- <i class="fa fa-check"></i> -->
+<svg fill="transparent" id="icon-tick" stroke="#1F272E" stroke-width="2" style="width: 12px; height: 12px; margin-top: 5px;" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 9.66667L5.33333 13L14 3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10"></path>
+</svg>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-4 column-break">
+<div class="row data-field" data-fieldname="total_qty" data-fieldtype="Float">
+<div class="col-xs-12">
+<label>Total Quantity: </label>
+</div>
+<div class="col-xs-12 value">
+					170
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-4 column-break">
+</div>
+<div class="col-xs-4 column-break">
+<div class="row data-field">
+<div class="col-xs-5">
+<label>Total</label></div>
+<div class="col-xs-7 text-right value">
+			€ 1 437,60
+		</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="">
+<div class="col-xs-12 column-break">
+<div class="row">
+<div class="col-xs-6"></div>
+<div class="col-xs-6"><div class="row">
+<div class="col-xs-5">
+<label>TVA 20 %</label>
+</div>
+<div class="col-xs-7 text-right">
+					€ 287,52
+				</div>
+</div></div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Totals">
+<div class="col-xs-6 column-break">
+</div>
+<div class="col-xs-6 column-break">
+<div class="row important data-field" data-fieldname="grand_total" data-fieldtype="Currency">
+<div class="col-xs-5">
+<label>Grand Total: </label>
+</div>
+<div class="col-xs-7 text-right value">
+					
+		€ 1 725,12
+	
+				</div>
+</div>
+<div class="row important data-field" data-fieldname="rounded_total" data-fieldtype="Currency">
+<div class="col-xs-5">
+<label>Rounded Total: </label>
+</div>
+<div class="col-xs-7 text-right value">
+					
+		€ 1 725,12
+	
+				</div>
+</div>
+<div class="row data-field" data-fieldname="in_words" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>In Words: </label>
+</div>
+<div class="col-xs-7 value">
+					EUR One Thousand, Seven Hundred And Twenty Five and Twelve Cent only.
+	
+				</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Additional Discount">
+<div class="col-xs-6 column-break">
+</div>
+<div class="col-xs-6 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="Advance Payments">
+<div class="col-xs-12 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="Billing Address">
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="address_display" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>Address: </label>
+</div>
+<div class="col-xs-7 value">
+					48 avenue Jean Jaurès<br/>
+Bâtiment B<br/>Villeurbanne<br/>
+69100<br/>France<br/>
+<br/>
+</div>
+</div>
+</div>
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="contact_display" data-fieldtype="Small Text">
+<div class="col-xs-5">
+<label>Contact: </label>
+</div>
+<div class="col-xs-7 value">
+					Élodie Dupont
+	
+				</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Payment Terms">
+<div class="col-xs-12 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="Terms and Conditions">
+<div class="col-xs-12 column-break">
+<div data-fieldname="terms" data-fieldtype="Text Editor" style="padding: 10px 0px"><div class="ql-snow"><p>Paiement à 30 jours fin de mois par virement bancaire. Pas d'escompte pour paiement anticipé. Les pièces sont réalisées à la main : de légères variations de teinte et de dimensions sont normales et ne constituent pas un défaut. Toute réclamation doit être formulée par écrit dans les 8 jours suivant la réception de la marchandise.</p></div></div>
+</div>
+</div>
+<div class="row section-break" data-label="Customer PO Details">
+<div class="col-xs-6 column-break">
+</div>
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="po_date" data-fieldtype="Date">
+<div class="col-xs-5">
+<label>Customer's Purchase Order Date: </label>
+</div>
+<div class="col-xs-7 value">
+					02/10/2026
+	
+				</div>
+</div>
+</div>
+</div>
+<div class="row section-break" data-label="Commission">
+<div class="col-xs-6 column-break">
+<div class="row data-field" data-fieldname="amount_eligible_for_commission" data-fieldtype="Currency">
+<div class="col-xs-5">
+<label>Amount Eligible for Commission: </label>
+</div>
+<div class="col-xs-7 text-right value">
+					
+		€ 1 437,60
+	
+				</div>
+</div>
+</div>
+<div class="col-xs-6 column-break">
+</div>
+</div>
+<div class="row section-break" data-label="Additional Info">
+<div class="col-xs-6 column-break">
+</div>
+<div class="col-xs-6 column-break">
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const page_div = document.querySelector('.page-break');
+
+			if (page_div) {
+				page_div.style.display = 'flex';
+				page_div.style.flexDirection = 'column';
+			}
+
+			const footer_html = document.getElementById('footer-html');
+			if (footer_html)  {
+				footer_html.classList.add('hidden-pdf');
+				footer_html.classList.remove('visible-pdf');
+				footer_html.style.order = 1;
+				footer_html.style.marginTop = '20px';
+			}
+		});
+	</script>
+</body><!-- Administrator --></html>
