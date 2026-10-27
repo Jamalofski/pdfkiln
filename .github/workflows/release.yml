@@ -15,6 +15,11 @@ run-name: "Release from ci ${{ inputs.ci_run }} and arm64 ${{ inputs.arm64_run }
 # maintainer's (draft=false publishes at once). The other channels, from the
 # same runs, each by hand: apt.yml (APT repository), npm.yml, docker.yml.
 #
+# Run it before them, and change no workflow on main between the CI runs and
+# the release: GitHub refuses this token a release (403) on a commit whose
+# workflows differ from main's, since it counts as a workflow change. If one
+# had to change, start ci and arm64 on main again and release from them.
+#
 # Provenance: the jobs that build the packages attest them once the
 # repository is public (GitHub attests in a private one only with
 # Enterprise Cloud); each file's attestation is then checked here.
@@ -73,6 +78,18 @@ jobs:
           [ "$arm_name $arm_branch $arm_conclusion" = 'arm64 main success' ] || { echo "::error::$ARM64_RUN is not a green run of arm64 on main"; exit 1; }
           [ "$ci_sha" = "$arm_sha" ] || { echo "::error::the two runs built different commits"; exit 1; }
           echo "sha=$ci_sha" >> "$GITHUB_OUTPUT"
+
+      # The 403 above, told before anything is built, dry runs included.
+      - name: Workflows as on main
+        env:
+          SHA: ${{ steps.runs.outputs.sha }}
+          MAIN: ${{ github.event.repository.default_branch }}
+        run: |
+          changed="$(gh api "repos/$GITHUB_REPOSITORY/compare/$SHA...$MAIN" --jq '[.files[].filename | select(startswith(".github/workflows/"))] | join(" ")')"
+          if [ -n "$changed" ]; then
+            echo "::error::$MAIN changed workflows since $SHA ($changed): GitHub would refuse the release (403). Start ci and arm64 on $MAIN again, then this workflow with their ids."
+            exit 1
+          fi
 
       - uses: actions/checkout@v7
         with:
