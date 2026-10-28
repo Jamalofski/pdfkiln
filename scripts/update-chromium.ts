@@ -1,7 +1,10 @@
 // Before a pdfkiln version: reads the Stable version of Chrome for Testing;
 // when it is newer than chromium.json's, downloads every archive of the pin,
 // records its size and SHA-256, and moves chromium.json and
-// src/version.ts to it.
+// src/version.ts to it. Run locally, not in CI: the pin goes in the commit
+// of the version that ships it (package.json, src/version.ts), checked
+// locally then on staging before ci and arm64. Every archive is read once,
+// about 700 MB, and none is kept.
 //
 //   node dist/scripts/update-chromium.js [--dry-run]
 //

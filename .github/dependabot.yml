@@ -1,5 +1,5 @@
-# Weekly updates of the other dependencies; Chromium has its own workflow
-# (chromium.yml).
+# Weekly updates of the other dependencies; Chromium's pin moves with a
+# pdfkiln version (scripts/update-chromium.ts).
 version: 2
 updates:
   - package-ecosystem: npm
