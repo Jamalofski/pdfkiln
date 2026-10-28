@@ -42,6 +42,16 @@ docker run --rm -i --security-opt seccomp=seccomp.json ghcr.io/jamalofski/pdfkil
 
 `--security-opt seccomp=unconfined` and `--cap-add SYS_ADMIN` work too, but drop the whole filter or grant a capability that helps escape a container: not recommended.
 
+**PHP** (Composer, PHP 7.4 or later), for knp-snappy and the other PHP libraries: [`pdfkiln/pdfkiln`](https://packagist.org/packages/pdfkiln/pdfkiln) puts `wkhtmltopdf` and `wkhtmltoimage` in `vendor/bin` and downloads the program of the platform on first use, its SHA-256 checked. It takes the place of packages that ship wkhtmltopdf itself, such as `h4cc/wkhtmltopdf-amd64`. On a Linux server, the Debian package or the Docker image is better: they bring Chromium's system libraries.
+
+```sh
+composer require pdfkiln/pdfkiln
+```
+
+```php
+$snappy = new Knp\Snappy\Pdf(Pdfkiln\binary());
+```
+
 **npm** (Node.js 22.12 or later), for Node projects; Chromium is downloaded on first use into the user's cache, its SHA-256 checked. npm refuses the name `pdfkiln`, too close to `pdfkit`, hence the scope:
 
 ```sh
@@ -49,7 +59,7 @@ npx @pdfkiln/pdfkiln wkhtmltopdf page.html page.pdf
 npm install -g @pdfkiln/pdfkiln    # pdfkiln, wkhtmltopdf and wkhtmltoimage
 ```
 
-Coming later: Scoop, winget, Homebrew and Composer (the manifests are ready, `packaging/`).
+Coming later: Scoop, winget and Homebrew (the manifests are ready, `packaging/`).
 
 Chromium's sandbox stays on: run as an unprivileged user, not root.
 
@@ -67,7 +77,7 @@ Point the library at pdfkiln's `wkhtmltopdf` or `wkhtmltoimage`, never at `pdfki
 
 | Library | Setting |
 | --- | --- |
-| knp-snappy | `new Knp\Snappy\Pdf('/usr/bin/wkhtmltopdf')` |
+| knp-snappy | `new Knp\Snappy\Pdf('/usr/bin/wkhtmltopdf')`; with the Composer package, `new Knp\Snappy\Pdf(Pdfkiln\binary())` |
 | laravel-snappy | `WKHTML_PDF_BINARY=/usr/bin/wkhtmltopdf` in `.env` (`config/snappy.php`, `pdf.binary`) |
 | phpwkhtmltopdf | `new mikehaertl\wkhtmlto\Pdf(['binary' => '/usr/bin/wkhtmltopdf'])`, or nothing if it is in the `PATH` |
 | pdfkit (Python) | `pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')`, or nothing if it is in the `PATH` |
