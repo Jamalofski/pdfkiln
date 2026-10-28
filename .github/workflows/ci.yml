@@ -683,7 +683,7 @@ jobs:
   # an ASP.NET page in IIS on the runner (Windows Server 2025 with the
   # Desktop Experience), run as the application pool's identity, with its
   # user profile loaded (IIS's default), then without; and Windows Server
-  # Core, where Chromium does not start (README.md, "Known issues in 1.0"):
+  # Core, where Chromium does not start (README.md, Installation, Windows):
   # the conversion must fail with the message that says so.
   dotnet:
     needs: package
@@ -751,7 +751,7 @@ jobs:
           $code = $LASTEXITCODE
           $out
           if (Test-Path "$site\servercore.pdf") {
-            "Chromium runs on Server Core now: README.md, 'Known issues in 1.0', and explain() in src/engine/browser.ts are out of date"
+            "Chromium runs on Server Core now: README.md (Installation, Windows) and explain() in src/engine/browser.ts are out of date"
             exit 1
           }
           if ($code -ne 1 -or $out -notmatch 'Chromium does not run on Windows Server Core') { "exit code ${code}: not the expected refusal"; exit 1 }

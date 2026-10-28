@@ -29,7 +29,7 @@ sudo apt update && sudo apt install pdfkiln
 
 It installs `/usr/bin/pdfkiln` and `/usr/bin/wkhtmltopdf`, replaces the official `wkhtmltox` package, and loads an AppArmor profile so that Chromium's sandbox works on Ubuntu 24.04. The `.deb` of a [release](https://github.com/Jamalofski/pdfkiln/releases/latest), installed by hand, sets the repository up itself.
 
-**Windows** (x64; ARM runs it in emulation): from the [latest release](https://github.com/Jamalofski/pdfkiln/releases/latest), the installer `pdfkiln-<version>-windows-x64-setup.exe`, or the zip, which holds `wkhtmltopdf\bin\wkhtmltopdf.exe` as the old installer did. Both install in `C:\Program Files\wkhtmltopdf`, the path pdfkit and most guides use: uninstall wkhtmltopdf first. The programs are not signed yet: SmartScreen warns about the installer; check it against the release's `SHA256SUMS`.
+**Windows** (x64; ARM runs it in emulation; Windows Server with the Desktop Experience, IIS included, not Server Core, where Chromium stops at start and pdfkiln says so): from the [latest release](https://github.com/Jamalofski/pdfkiln/releases/latest), the installer `pdfkiln-<version>-windows-x64-setup.exe`, or the zip, which holds `wkhtmltopdf\bin\wkhtmltopdf.exe` as the old installer did. Both install in `C:\Program Files\wkhtmltopdf`, the path pdfkit and most guides use: uninstall wkhtmltopdf first. The programs are not signed yet: SmartScreen warns about the installer; check it against the release's `SHA256SUMS`.
 
 **Linux and macOS archives** (Linux x64 and ARM64, macOS ARM64): the program, its Chromium, and `wkhtmltopdf` and `wkhtmltoimage` beside it. Unpack anywhere and put the folder in the `PATH`.
 
@@ -74,7 +74,7 @@ Point the library at pdfkiln's `wkhtmltopdf` or `wkhtmltoimage`, never at `pdfki
 | wicked_pdf | `WickedPdf.config = { exe_path: '/usr/bin/wkhtmltopdf' }` in an initializer; drop the `wkhtmltopdf-binary` gem |
 | imgkit (Python) | `imgkit.config(wkhtmltoimage='/usr/bin/wkhtmltoimage')`, or nothing if it is in the `PATH` |
 | Odoo, Frappe / ERPNext | nothing: they find `wkhtmltopdf` in the `PATH` |
-| Rotativa (ASP.NET) | copy the content of `wkhtmltopdf\bin` (the programs and `chromium\`) into the Rotativa folder; tested with Rotativa.AspNetCore's driver, and in IIS as the application pool's identity on Windows Server with the Desktop Experience (not on Server Core, see Known issues) |
+| Rotativa (ASP.NET) | copy the content of `wkhtmltopdf\bin` (the programs and `chromium\`) into the Rotativa folder; tested with Rotativa.AspNetCore's driver, and in IIS as the application pool's identity on Windows Server with the Desktop Experience (not on Server Core, see Installation) |
 
 With the Debian package, `/usr/bin/wkhtmltopdf` is already in the `PATH`. Libraries that read the version keep working: `wkhtmltopdf --version` prints `wkhtmltopdf 0.12.6 (with patched qt), pdfkiln <version>, Chromium <version>`.
 
@@ -90,7 +90,6 @@ With the Debian package, `/usr/bin/wkhtmltopdf` is already in the `PATH`. Librar
 
 ## Known issues in 1.0
 
-- Windows Server Core: Chromium stops at start (`STATUS_STACK_OVERFLOW`), whatever the account and the sandbox (Server Core 2022 and 2025, in containers), and pdfkiln says so. Windows Server with the Desktop Experience runs it, IIS included (as the application pool's identity, with or without its user profile), and so does the `mcr.microsoft.com/windows/server` container image.
 - In a page opened from a file (a path, or standard input, which goes through a file as in wkhtmltopdf: what most libraries pass), an iframe of another origin is not printed: its space stays blank, without an error; wkhtmltopdf printed it. Chromium gives such an iframe a process of its own, and chrome-headless-shell does not print those. A page loaded from a URL prints its iframes, whatever their origin.
 
 ## Security
