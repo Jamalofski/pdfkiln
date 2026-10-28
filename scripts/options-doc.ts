@@ -43,9 +43,9 @@ ${table(of('noop', 'silent'))}
 
 ${table(KILN_OPTIONS)}
 
-## Known deviation
+## Kept as in wkhtmltopdf 0.12.6
 
-\`--no-custom-header-propagation\` turns the propagation on in wkhtmltopdf 0.12.6, a mistake in its code; in pdfkiln it turns it off, as its name says.
+\`--no-custom-header-propagation\` turns the propagation on, like \`--custom-header-propagation\`: a mistake in wkhtmltopdf's code, which the commands written for it rely on.
 
 ## wkhtmltoimage
 

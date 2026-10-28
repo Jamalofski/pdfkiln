@@ -187,8 +187,9 @@ export const OPTIONS: OptionSpec[] = [
   { name: 'load-media-error-handling', mode: P, args: ['handler'], support: 'yes', desc: 'Media that fail to load: abort, ignore or skip', apply: set((t, v) => (t.o.load.mediaLoadErrorHandling = v), handling) },
   { name: 'custom-header', mode: P, args: ['name', 'value'], support: 'yes', desc: 'Add an HTTP header (repeatable)', apply: (t, a) => (t.o.load.customHeaders.push([a[0]!, a[1]!]), true) },
   { name: 'custom-header-propagation', mode: P, args: [], support: 'yes', desc: 'Send --custom-header with every request', apply: flag((t) => (t.o.load.repeatCustomHeaders = true)) },
-  // wkhtmltopdf 0.12.6 sets propagation here too, a bug: we turn it off.
-  { name: 'no-custom-header-propagation', mode: P, args: [], support: 'yes', desc: 'Send --custom-header with the page only', apply: flag((t) => (t.o.load.repeatCustomHeaders = false)) },
+  // wkhtmltopdf 0.12.6 sets propagation here too, a mistake in its code
+  // that callers rely on without knowing: kept.
+  { name: 'no-custom-header-propagation', mode: P, args: [], support: 'yes', desc: 'Same as --custom-header-propagation, as in wkhtmltopdf 0.12.6', apply: flag((t) => (t.o.load.repeatCustomHeaders = true)) },
   { name: 'javascript-delay', mode: P, args: ['msec'], support: 'yes', desc: 'Wait up to this long after loading (default 200), less once nothing can change the page', apply: set((t, v) => (t.o.load.jsdelay = v), int) },
   { name: 'window-status', mode: P, args: ['windowStatus'], support: 'yes', desc: 'Wait until window.status equals this string', apply: set((t, v) => (t.o.load.windowStatus = v), str) },
   { name: 'zoom', mode: P, args: ['float'], support: 'yes', desc: 'Zoom factor', apply: set((t, v) => (t.o.load.zoomFactor = v), float) },

@@ -67,7 +67,7 @@ Called as `wkhtmltopdf`, pdfkiln accepts the 122 options of wkhtmltopdf 0.12.6, 
 | `--load-media-error-handling <handler>` |  | page | Media that fail to load: abort, ignore or skip |
 | `--custom-header <name> <value>` |  | page | Add an HTTP header (repeatable) |
 | `--custom-header-propagation` |  | page | Send --custom-header with every request |
-| `--no-custom-header-propagation` |  | page | Send --custom-header with the page only |
+| `--no-custom-header-propagation` |  | page | Same as --custom-header-propagation, as in wkhtmltopdf 0.12.6 |
 | `--javascript-delay <msec>` |  | page | Wait up to this long after loading (default 200), less once nothing can change the page |
 | `--window-status <windowStatus>` |  | page | Wait until window.status equals this string |
 | `--zoom <float>` |  | page | Zoom factor |
@@ -144,9 +144,9 @@ A warning unless `--quiet`, never an effect on the exit code; none for `--lowqua
 | `--kiln-block-private-network` |  | global | Refuse loopback, private and link-local addresses |
 | `--kiln-no-sandbox` |  | global | Run Chromium without its sandbox (not recommended) |
 
-## Known deviation
+## Kept as in wkhtmltopdf 0.12.6
 
-`--no-custom-header-propagation` turns the propagation on in wkhtmltopdf 0.12.6, a mistake in its code; in pdfkiln it turns it off, as its name says.
+`--no-custom-header-propagation` turns the propagation on, like `--custom-header-propagation`: a mistake in wkhtmltopdf's code, which the commands written for it rely on.
 
 ## wkhtmltoimage
 
@@ -190,7 +190,7 @@ Called as `wkhtmltoimage`, pdfkiln accepts the 63 options of wkhtmltoimage 0.12.
 | `--log-level <level>` |  | Set log level to: none, error, warn or info |
 | `--manpage` |  | Output the help as a man page |
 | `--minimum-font-size <int>` |  | Minimum font size |
-| `--no-custom-header-propagation` |  | Send --custom-header with the page only |
+| `--no-custom-header-propagation` |  | Same as --custom-header-propagation, as in wkhtmltopdf 0.12.6 |
 | `--no-debug-javascript` |  | Accepted, no effect (default) |
 | `--no-images` |  | Do not load or print images |
 | `--no-stop-slow-scripts` |  | Accepted; --kiln-timeout bounds the conversion |

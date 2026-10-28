@@ -74,7 +74,7 @@ Point the library at pdfkiln's `wkhtmltopdf` or `wkhtmltoimage`, never at `pdfki
 | wicked_pdf | `WickedPdf.config = { exe_path: '/usr/bin/wkhtmltopdf' }` in an initializer; drop the `wkhtmltopdf-binary` gem |
 | imgkit (Python) | `imgkit.config(wkhtmltoimage='/usr/bin/wkhtmltoimage')`, or nothing if it is in the `PATH` |
 | Odoo, Frappe / ERPNext | nothing: they find `wkhtmltopdf` in the `PATH` |
-| Rotativa (ASP.NET) | copy the content of `wkhtmltopdf\bin` (the programs and `chromium\`) into the Rotativa folder; Rotativa.AspNetCore's driver is tested, IIS is not supported yet (see Known issues) |
+| Rotativa (ASP.NET) | copy the content of `wkhtmltopdf\bin` (the programs and `chromium\`) into the Rotativa folder; tested with Rotativa.AspNetCore's driver, and in IIS as the application pool's identity on Windows Server with the Desktop Experience (not on Server Core, see Known issues) |
 
 With the Debian package, `/usr/bin/wkhtmltopdf` is already in the `PATH`. Libraries that read the version keep working: `wkhtmltopdf --version` prints `wkhtmltopdf 0.12.6 (with patched qt), pdfkiln <version>, Chromium <version>`.
 
@@ -90,10 +90,8 @@ With the Debian package, `/usr/bin/wkhtmltopdf` is already in the `PATH`. Librar
 
 ## Known issues in 1.0
 
-- Windows, IIS: under an application pool's identity (tested on Windows Server Core 2025, in a container), Chromium does not start and the conversion fails. Under a regular account, Rotativa.AspNetCore's driver works.
-- winget: the manifest validates, but a silent install stops before the installer starts (Windows Server 2025, GitHub Actions). The installer and the zip archive install as they should.
-- Iframes from another origin are not printed: their space stays blank, without an error. wkhtmltopdf printed them. It is Chromium's headless shell: an iframe of the page's own origin is printed.
-- `--no-custom-header-propagation` turns the propagation off, as its name says; in wkhtmltopdf 0.12.6 it turns it on.
+- Windows Server Core: Chromium stops at start (`STATUS_STACK_OVERFLOW`), whatever the account and the sandbox (Server Core 2022 and 2025, in containers), and pdfkiln says so. Windows Server with the Desktop Experience runs it, IIS included (as the application pool's identity, with or without its user profile), and so does the `mcr.microsoft.com/windows/server` container image.
+- In a page opened from a file (a path, or standard input, which goes through a file as in wkhtmltopdf: what most libraries pass), an iframe of another origin is not printed: its space stays blank, without an error; wkhtmltopdf printed it. Chromium gives such an iframe a process of its own, and chrome-headless-shell does not print those. A page loaded from a URL prints its iframes, whatever their origin.
 
 ## Security
 

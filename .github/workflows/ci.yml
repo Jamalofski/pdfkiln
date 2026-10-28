@@ -646,64 +646,45 @@ jobs:
           & "$scoop\shims\scoop.cmd" uninstall pdfkiln
           if ($LASTEXITCODE) { exit 1 }
 
-      # The installer, from the manifest: in C:\Program Files\wkhtmltopdf.
-      # A known issue of 1.0 (README.md, "Known issues in 1.0"):
-      # winget stops before the installer starts. Kept, not blocking, until
-      # it is fixed.
-      - name: winget manifest, validated, installed and tested (Windows)
-        id: winget
+      # The installer, as winget starts it from its community repository: in
+      # C:\Program Files\wkhtmltopdf. A package from a trusted source has
+      # its download marked as trusted (zone 2; winget-cli,
+      # DownloadFlow.cpp, UpdateInstallerFileMotwIfApplicable), then run
+      # through the shell with winget's switches for Inno Setup.
+      # `winget install --manifest` keeps the Internet zone instead, where
+      # SmartScreen stops an unsigned installer before it starts and a
+      # silent install waits forever (measured, run 40687558158; a signed
+      # installer passes).
+      - name: winget manifest, validated; installer started as winget does (Windows)
         if: runner.os == 'Windows'
-        continue-on-error: true
         shell: pwsh
         run: |
           $dir = (Get-ChildItem manifests\winget\manifests\j\Jamalofski\pdfkiln -Directory | Select-Object -First 1).FullName
           winget --version
           winget validate --manifest $dir
           if ($LASTEXITCODE) { exit 1 }
-          winget settings --enable LocalManifestFiles
-          # The install hung until the job's timeout, after "Starting package
-          # install..." (run 40223567684); then, bounded, winget showed a
-          # dialog and the installer had not started (run 40227192313).
-          # 5 minutes at most, then what is running, the dialog's text, and
-          # the logs of winget and of the installer.
-          $p = Start-Process winget -NoNewWindow -PassThru -ArgumentList 'install', '--manifest', $dir, '--silent',
-            '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity', '--verbose-logs'
+          $manifest = Get-Content (Get-ChildItem $dir -Filter *.installer.yaml).FullName -Raw
+          $url = [regex]::Match($manifest, 'InstallerUrl: (\S+)').Groups[1].Value
+          $sha = [regex]::Match($manifest, 'InstallerSha256: (\S+)').Groups[1].Value
+          $setup = "$env:RUNNER_TEMP\winget-setup.exe"
+          curl.exe -fsS -o $setup $url
+          if ($LASTEXITCODE -or (Get-FileHash $setup -Algorithm SHA256).Hash -ne $sha) { "installer $url does not match $sha"; exit 1 }
+          Set-Content -Path $setup -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=2"
+          $p = Start-Process -FilePath $setup -ArgumentList '/SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -PassThru
           $null = $p.Handle
-          if (-not $p.WaitForExit(300000)) {
-            Get-Process | Where-Object { $_.MainWindowTitle } | Format-Table Id, Name, MainWindowTitle -AutoSize
-            try {
-              Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
-              $mine = New-Object Windows.Automation.PropertyCondition ([Windows.Automation.AutomationElement]::ProcessIdProperty), $p.Id
-              foreach ($w in [Windows.Automation.AutomationElement]::RootElement.FindAll([Windows.Automation.TreeScope]::Children, $mine)) {
-                "== dialog: $($w.Current.Name)"
-                $w.FindAll([Windows.Automation.TreeScope]::Descendants, [Windows.Automation.Condition]::TrueCondition) |
-                  ForEach-Object { $_.Current.Name } | Where-Object { $_ } | Select-Object -Unique
-              }
-            } catch { "dialog text unavailable: $_" }
-            Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'setup|pdfkiln|wkhtml|winget|msiexec' } |
-              Format-Table ProcessId, ParentProcessId, Name, CommandLine -AutoSize -Wrap
-            Get-ChildItem "$env:LOCALAPPDATA\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir", "$env:TEMP" -Filter *.log -Recurse -ErrorAction SilentlyContinue |
-              Sort-Object LastWriteTime | Select-Object -Last 6 | ForEach-Object { "== $($_.FullName)"; Get-Content $_.FullName -Tail 60 }
-            exit 1
-          }
-          if ($p.ExitCode) { "winget exit code $($p.ExitCode)"; exit 1 }
+          if (-not $p.WaitForExit(300000) -or $p.ExitCode) { "installer: exit code $($p.ExitCode)"; exit 1 }
           $exe = "$env:ProgramFiles\wkhtmltopdf\bin\wkhtmltopdf.exe"
           & $exe --version
           if ($LASTEXITCODE) { exit 1 }
           '<h1>winget</h1>' | & $exe -q - winget.pdf
           if ($LASTEXITCODE -or -not (Get-Content winget.pdf -TotalCount 1).StartsWith('%PDF-')) { exit 1 }
 
-      - name: Known issue, winget
-        if: steps.winget.outcome == 'failure'
-        shell: bash
-        run: |
-          echo '::warning title=Known issue of 1.0::winget stops before the installer starts'
-          echo '- Known issue of 1.0, winget: the install stops before the installer starts (step above).' >> "$GITHUB_STEP_SUMMARY"
-
-  # .NET callers on Windows: Rotativa.AspNetCore's driver on the runner,
-  # then an ASP.NET page in IIS on Windows Server Core (a container, its
-  # system libraries those of Server Core), run as the application pool's
-  # identity, with its user profile loaded (IIS's default), then without.
+  # .NET callers on Windows: Rotativa.AspNetCore's driver on the runner;
+  # an ASP.NET page in IIS on the runner (Windows Server 2025 with the
+  # Desktop Experience), run as the application pool's identity, with its
+  # user profile loaded (IIS's default), then without; and Windows Server
+  # Core, where Chromium does not start (README.md, "Known issues in 1.0"):
+  # the conversion must fail with the message that says so.
   dotnet:
     needs: package
     runs-on: windows-2025
@@ -719,55 +700,60 @@ jobs:
       - name: Archive unpacked
         shell: pwsh
         run: |
-          $site = "$env:RUNNER_TEMP\iis\site"
+          $site = "$env:RUNNER_TEMP\site"
           New-Item -ItemType Directory $site | Out-Null
           tar.exe -xf (Get-ChildItem release\*.zip).FullName -C $site
-          Copy-Item test\iis\pdf.aspx $site
-          Copy-Item test\iis\Dockerfile "$env:RUNNER_TEMP\iis"
           Get-ChildItem "$site\wkhtmltopdf\bin" | Select-Object Name, Length
 
       - name: Rotativa.AspNetCore
         shell: pwsh
         run: |
           dotnet --list-sdks
-          dotnet run --project test\rotativa -- "$env:RUNNER_TEMP\iis\site\wkhtmltopdf\bin"
+          dotnet run --project test\rotativa -- "$env:RUNNER_TEMP\site\wkhtmltopdf\bin"
           if ($LASTEXITCODE) { exit 1 }
 
-      # A known issue of 1.0 (README.md, "Known issues in 1.0"): as
-      # the application pool's identity, Chromium does not start. Kept, not
-      # blocking, until it is fixed.
-      - name: IIS on Windows Server Core
-        id: iis
-        continue-on-error: true
-        shell: pwsh
+      - name: IIS, as the application pool's identity
+        shell: powershell
         run: |
-          docker build -t pdfkiln-iis "$env:RUNNER_TEMP\iis"
-          if ($LASTEXITCODE) { exit 1 }
-          docker run -d --name iis pdfkiln-iis
-          if ($LASTEXITCODE) { exit 1 }
-          $ip = docker inspect -f '{{.NetworkSettings.Networks.nat.IPAddress}}' iis
-          for ($i = 0; $i -lt 60; $i++) {
-            if ((curl.exe -s -o NUL -w '%{http_code}' "http://$ip/") -eq '200') { break }
+          $r = Install-WindowsFeature Web-Server, Web-Asp-Net45
+          if (-not $r.Success) { $r; exit 1 }
+          $site = 'C:\inetpub\wwwroot'
+          Copy-Item "$env:RUNNER_TEMP\site\*" $site -Recurse
+          Copy-Item test\iis\pdf.aspx $site
+          for ($i = 0; $i -lt 30; $i++) {
+            if ((curl.exe -s -o NUL -w '%{http_code}' http://localhost/) -eq '200') { break }
             Start-Sleep 2
           }
+          $appcmd = "$env:windir\System32\inetsrv\appcmd.exe"
           $failed = 0
           foreach ($case in 'profile', 'no-profile') {
             if ($case -eq 'no-profile') {
-              docker exec iis C:\Windows\System32\inetsrv\appcmd.exe set apppool DefaultAppPool /processModel.loadUserProfile:false
-              docker exec iis C:\Windows\System32\inetsrv\appcmd.exe recycle apppool DefaultAppPool
+              & $appcmd set apppool DefaultAppPool /processModel.loadUserProfile:false
+              & $appcmd recycle apppool DefaultAppPool
             }
-            $code = curl.exe -s -D "$case.headers" -o "$case.out" -w '%{http_code}' --max-time 120 "http://$ip/pdf.aspx"
+            $code = curl.exe -s -D "$case.headers" -o "$case.out" -w '%{http_code}' --max-time 120 http://localhost/pdf.aspx
             Get-Content "$case.headers" | Select-String '^X-'
             $pdf = [string](Get-Content "$case.out" -TotalCount 1 -ErrorAction SilentlyContinue) -like '%PDF-*'
             "${case}: HTTP $code, PDF $pdf"
             if (-not $pdf) { Get-Content "$case.out" -ErrorAction SilentlyContinue; $failed = 1 }
           }
-          docker exec iis C:\Windows\System32\inetsrv\appcmd.exe list apppool DefaultAppPool /text:processModel.loadUserProfile
+          & $appcmd list apppool DefaultAppPool /text:processModel.loadUserProfile
           exit $failed
 
-      - name: Known issue, IIS
-        if: steps.iis.outcome == 'failure'
-        shell: bash
+      # The archive mounted in a Server Core container, run as its
+      # administrator: the account does not matter there.
+      - name: Windows Server Core, the conversion refused with its reason
+        shell: pwsh
         run: |
-          echo '::warning title=Known issue of 1.0::IIS: as the application pool identity, Chromium does not start'
-          echo '- Known issue of 1.0, IIS: as the application pool identity, Chromium does not start (step above).' >> "$GITHUB_STEP_SUMMARY"
+          $site = "$env:RUNNER_TEMP\site"
+          Set-Content "$site\servercore.html" '<h1>Server Core</h1>'
+          $out = docker run --rm -v "${site}:C:\site" mcr.microsoft.com/windows/servercore:ltsc2025 C:\site\wkhtmltopdf\bin\wkhtmltopdf.exe -q C:\site\servercore.html C:\site\servercore.pdf 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          $out
+          if (Test-Path "$site\servercore.pdf") {
+            "Chromium runs on Server Core now: README.md, 'Known issues in 1.0', and explain() in src/engine/browser.ts are out of date"
+            exit 1
+          }
+          if ($code -ne 1 -or $out -notmatch 'Chromium does not run on Windows Server Core') { "exit code ${code}: not the expected refusal"; exit 1 }
+          # The step would end with docker's exit code, the expected 1.
+          exit 0

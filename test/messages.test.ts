@@ -1,6 +1,7 @@
 // What wkhtmltopdf writes on stderr and how it exits.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { explain } from '../src/engine/browser.js';
 import { Feedback } from '../src/wk/feedback.js';
 import { handleError, qtErrorForHttpStatus } from '../src/wk/qtnet.js';
 
@@ -13,6 +14,13 @@ test('exit codes, measured on wkhtmltopdf 0.12.6', () => {
   assert.deepEqual(handleError(true, 0), { code: 0 });
   // What the code of wkhtmltopdf would do with a bare HTTP status.
   assert.deepEqual(handleError(true, 404), { code: 2, line: 'Exit with code 2 due to http error: 404 Page not found' });
+});
+
+test('Chromium that does not start: the reason, with the fix', () => {
+  const closed = 'Protocol error (Target.setDiscoverTargets): Target closed';
+  assert.equal(explain(closed, () => false), `Chromium did not start: ${closed}`);
+  assert.match(explain(closed, () => true), /^Chromium does not run on Windows Server Core: .* Desktop Experience/);
+  assert.match(explain('Running as root without --no-sandbox is not supported', () => false), /refuses to run as root/);
 });
 
 test('phases, padded over the progress bar', () => {

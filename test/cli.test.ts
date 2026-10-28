@@ -69,6 +69,8 @@ const file = (name: string, content: string) => {
 let server: Server;
 let base = '';
 let hangs: (() => void)[] = [];
+// X-Test as the last /img request carried it.
+let imgHeader = '';
 before(async () => {
   server = createServer((req, res) => {
     const path = (req.url ?? '/').split('?')[0];
@@ -85,6 +87,7 @@ before(async () => {
     if (path === '/404') return html('missing', 404);
     if (path === '/css404') return html('<link rel="stylesheet" href="/nope.css">styled');
     if (path === '/headers') return html(`<p>X-Test=${req.headers['x-test'] ?? 'none'}</p><img src="/img">`);
+    if (path === '/img') imgHeader = String(req.headers['x-test'] ?? 'none');
     if (path === '/img') return res.writeHead(200, { 'content-type': 'image/svg+xml' }).end(`<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><text y="10">${req.headers['x-test'] ?? 'none'}</text></svg>`);
     if (path === '/hang') {
       hangs.push(() => res.end());
@@ -160,8 +163,15 @@ describe('interface', () => {
     let r = await run(['-q', '--custom-header', 'X-Test', 'yes', `${base}/headers`, out]);
     assert.equal(r.code, 0);
     if (hasPyMuPDF) assert.match(pagesText(out)[0]!, /X-Test=yes/);
+    assert.equal(imgHeader, 'none');
     r = await run(['-q', '--custom-header', 'X-Test', 'yes', '--custom-header-propagation', `${base}/headers`, out]);
     assert.equal(r.code, 0);
+    assert.equal(imgHeader, 'yes');
+    // wkhtmltopdf 0.12.6 propagates with the negative option too.
+    imgHeader = '';
+    r = await run(['-q', '--custom-header', 'X-Test', 'yes', '--no-custom-header-propagation', `${base}/headers`, out]);
+    assert.equal(r.code, 0);
+    assert.equal(imgHeader, 'yes');
   });
 
   test('--read-args-from-stdin: one conversion per line', async () => {

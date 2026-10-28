@@ -19,8 +19,26 @@ export interface LaunchOptions {
 
 export class LaunchError extends Error {}
 
-// Explains the usual reasons the sandbox cannot start, with the fix.
-export function explain(message: string): string {
+// Windows Server Core, read from the registry. Chromium stops at start there
+// (STATUS_STACK_OVERFLOW), whatever the account and the sandbox: measured on
+// Server Core 2022 and 2025 in containers, as the administrator and as an
+// IIS application pool, and with Media Foundation turned on. Windows Server
+// with the Desktop Experience runs it, IIS included.
+export function windowsServerCore(): boolean {
+  if (process.platform !== 'win32') return false;
+  try {
+    const out = execFileSync('reg', ['query', 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion', '/v', 'InstallationType'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true });
+    return /InstallationType\s+REG_SZ\s+Server Core\s*$/m.test(out);
+  } catch {
+    return false;
+  }
+}
+
+// Explains the usual reasons Chromium cannot start, with the fix.
+export function explain(message: string, serverCore: () => boolean = windowsServerCore): string {
+  if (serverCore()) {
+    return 'Chromium does not run on Windows Server Core: it stops at start, for want of system libraries. Use Windows Server with the Desktop Experience, or the mcr.microsoft.com/windows/server container image rather than servercore.';
+  }
   if (/as root without --no-sandbox/i.test(message)) {
     return 'Chromium refuses to run as root with its sandbox on. Run the command as an unprivileged user (or pass --kiln-no-sandbox, not recommended).';
   }
