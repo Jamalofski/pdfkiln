@@ -10,11 +10,11 @@ const sums = Object.fromEntries(files.map((f, i) => [f, String(i).repeat(64)]));
 test('Scoop, winget, Homebrew and Composer point at the release, with its sums', () => {
   const m = manifests('1.2.3', sums);
   const scoop = JSON.parse(m['scoop/pdfkiln.json']!);
-  assert.equal(scoop.architecture['64bit'].url, `${REPO}/releases/download/v1.2.3/pdfkiln-1.2.3-windows-x64.zip`);
+  assert.equal(scoop.architecture['64bit'].url, `${REPO}/releases/download/1.2.3/pdfkiln-1.2.3-windows-x64.zip`);
   assert.equal(scoop.architecture['64bit'].hash, '4'.repeat(64));
   assert.deepEqual(scoop.bin, ['bin\\wkhtmltopdf.exe', 'bin\\wkhtmltoimage.exe', 'bin\\pdfkiln.exe']);
   const installer = m['winget/manifests/j/Jamalofski/pdfkiln/1.2.3/Jamalofski.pdfkiln.installer.yaml']!;
-  assert.match(installer, /InstallerUrl: \S+\/v1\.2\.3\/pdfkiln-1\.2\.3-windows-x64-setup\.exe\n  InstallerSha256: 5{64}\n/);
+  assert.match(installer, /InstallerUrl: \S+\/1\.2\.3\/pdfkiln-1\.2\.3-windows-x64-setup\.exe\n  InstallerSha256: 5{64}\n/);
   assert.match(installer, /InstallerType: inno/);
   const formula = m['homebrew/Formula/pdfkiln.rb']!;
   assert.match(formula, /url "\S+pdfkiln-1\.2\.3-macos-arm64\.tar\.gz"\n\s+sha256 "3{64}"/);
@@ -23,7 +23,7 @@ test('Scoop, winget, Homebrew and Composer point at the release, with its sums',
   assert.match(formula, /def install\n.*"tar", "-cf", "chromium\.tar", "chromium"/s);
   assert.match(formula, /def post_install\n.*"tar", "-xf"/s);
   const pins = JSON.parse(m['composer/pins.json']!);
-  assert.equal(pins.url, `${REPO}/releases/download/v1.2.3`);
+  assert.equal(pins.url, `${REPO}/releases/download/1.2.3`);
   assert.equal(Object.keys(pins.sha256).length, 5);
   const composer = JSON.parse(m['composer/composer.json']!);
   assert.deepEqual(composer.bin, ['bin/wkhtmltopdf', 'bin/wkhtmltoimage', 'bin/pdfkiln']);

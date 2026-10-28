@@ -30,7 +30,7 @@ export function readSums(dir: string): Record<string, string> {
 export interface Manifests { [path: string]: string }
 
 export function manifests(version: string, sums: Record<string, string>): Manifests {
-  const url = `${REPO}/releases/download/v${version}`;
+  const url = `${REPO}/releases/download/${version}`;
   const file = (platform: string, ext: string) => `pdfkiln-${version}-${platform}${ext}`;
   const sum = (name: string) => {
     const s = sums[name];
@@ -51,7 +51,7 @@ export function manifests(version: string, sums: Record<string, string>): Manife
     bin: ['bin\\wkhtmltopdf.exe', 'bin\\wkhtmltoimage.exe', 'bin\\pdfkiln.exe'],
     checkver: { github: REPO },
     autoupdate: {
-      architecture: { '64bit': { url: `${REPO}/releases/download/v$version/pdfkiln-$version-windows-x64.zip` } },
+      architecture: { '64bit': { url: `${REPO}/releases/download/$version/pdfkiln-$version-windows-x64.zip` } },
       hash: { url: '$url.sha256' },
     },
   }, null, 2)}\n`;

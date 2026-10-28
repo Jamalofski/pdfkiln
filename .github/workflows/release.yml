@@ -108,10 +108,10 @@ jobs:
         id: version
         run: |
           version="$(node -p "require('./package.json').version")"
-          if gh release view "v$version" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+          if gh release view "$version" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo "::error::v$version already has a release"; exit 1
           fi
-          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+          if git ls-remote --exit-code --tags origin "refs/tags/$version" > /dev/null; then
             echo "::error::the tag v$version exists"; exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -155,8 +155,8 @@ jobs:
         run: |
           draft=()
           [ "$DRAFT" = true ] && draft=(--draft)
-          gh release create "v$VERSION" release/* --repo "$GITHUB_REPOSITORY" --target "$SHA" \
-            --title "pdfkiln $VERSION" --notes-file notes.md "${draft[@]}"
+          gh release create "$VERSION" release/* --repo "$GITHUB_REPOSITORY" --target "$SHA" \
+            --title "$VERSION" --notes-file notes.md "${draft[@]}"
 
       - name: Dry run
         if: inputs.confirm != 'release'
