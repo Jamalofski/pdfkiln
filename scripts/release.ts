@@ -4,14 +4,17 @@
 // notes. Run by .github/workflows/release.yml.
 //
 //   node dist/scripts/release.js --from <folder of the runs' artifacts> --out <folder>
-//     [--notes <file> --repo <owner/name> --commit <sha> --ci-run <id> --arm64-run <id> --attested]
+//     [--notes <file> --repo <owner/name> --commit <sha> --ci-run <id> --arm64-run <id> --attested
+//      --previous-chromium <version>]
 //
-// Output: the release's files and SHA256SUMS in --out, the notes in --notes.
+// Output: the release's files and SHA256SUMS in --out, the notes in --notes,
+// which open with the version's section of CHANGELOG.md.
 import { createHash } from 'node:crypto';
 import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+import { repoRoot } from '../src/chromium.js';
 import { chromiumVersion, version } from '../src/version.js';
 import { readSums, REPO } from './manifests.js';
 
@@ -71,11 +74,35 @@ export function assemble(from: string, out: string, files: ReleaseFile[]): Assem
 
 export interface Origin { repo: string; commit: string; ciRun: string; arm64Run: string; attested: boolean }
 
-export function notes(version: string, chromium: string, origin: Origin, files: Assembled[]): string {
-  const url = `https://github.com/${origin.repo}`;
-  return `pdfkiln ${version}, with Chromium ${chromium} (chrome-headless-shell, Chrome for Testing).
+// The section of CHANGELOG.md for `version`, from its "## <version>" heading
+// to the next one: none, or an empty one, stops the release.
+export function changes(changelog: string, version: string): string {
+  const lines = changelog.split(/\r?\n/);
+  const start = lines.findIndex((l) => l.trim() === `## ${version}`);
+  if (start < 0) throw new Error(`CHANGELOG.md has no "## ${version}" section`);
+  const end = lines.findIndex((l, i) => i > start && l.startsWith('## '));
+  const section = lines.slice(start + 1, end < 0 ? undefined : end).join('\n').trim();
+  if (!section) throw new Error(`CHANGELOG.md: the "## ${version}" section is empty`);
+  return section;
+}
 
-Drop-in replacement for wkhtmltopdf, powered by Chromium: called as \`wkhtmltopdf\` or \`wkhtmltoimage\`, it accepts the command line of wkhtmltopdf 0.12.6. Installation and migration: [README](${url}/blob/${origin.commit}/README.md). Not affiliated with the wkhtmltopdf project.
+// What changed first, Chromium's version ahead of the changelog's lines
+// (`previous`: the Chromium of the latest release, empty for the first),
+// then the files; what pdfkiln is, last, for those who land here.
+export function notes(version: string, chromium: string, previous: string, changed: string, origin: Origin, files: Assembled[]): string {
+  const url = `https://github.com/${origin.repo}`;
+  const shell = 'chrome-headless-shell, Chrome for Testing';
+  const line = !previous
+    ? `Chromium ${chromium} (${shell}).`
+    : previous === chromium
+      ? `Chromium unchanged: ${chromium} (${shell}).`
+      : `Chromium ${chromium} (${shell}), from ${previous}.`;
+  return `## Changes in ${version}
+
+- ${line}
+${changed}
+
+## Files
 
 | File | For | Size |
 | --- | --- | --- |
@@ -84,7 +111,9 @@ ${files.map((f) => `| \`${f.file}\` | ${f.label} | ${(f.size / 1e6).toFixed(1)} 
 The files as CI built and tested them, from commit [${origin.commit.slice(0, 7)}](${url}/commit/${origin.commit}): [ci run ${origin.ciRun}](${url}/actions/runs/${origin.ciRun}) and [arm64 run ${origin.arm64Run}](${url}/actions/runs/${origin.arm64Run}) (GitHub keeps run logs 90 days).
 
 - Checksums: \`sha256sum -c SHA256SUMS --ignore-missing\`
-${origin.attested ? `- Provenance: \`gh attestation verify <file> --repo ${origin.repo}\`\n` : ''}`;
+${origin.attested ? `- Provenance: \`gh attestation verify <file> --repo ${origin.repo}\`\n` : ''}
+pdfkiln is a drop-in replacement for wkhtmltopdf, powered by Chromium: called as \`wkhtmltopdf\` or \`wkhtmltoimage\`, it accepts the command line of wkhtmltopdf 0.12.6. Installation and migration: [README](${url}/blob/${origin.commit}/README.md). Not affiliated with the wkhtmltopdf project.
+`;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -98,13 +127,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       'ci-run': { type: 'string', default: '' },
       'arm64-run': { type: 'string', default: '' },
       attested: { type: 'boolean', default: false },
+      'previous-chromium': { type: 'string', default: '' },
     },
   });
   if (!values.from || !values.out) throw new Error('--from <folder of the runs\' artifacts> and --out <folder> are required');
+  const changed = values.notes ? changes(readFileSync(join(repoRoot, 'CHANGELOG.md'), 'utf8'), version) : '';
   const files = assemble(values.from, values.out, releaseFiles(version));
   if (values.notes) {
     const origin = { repo: values.repo, commit: values.commit, ciRun: values['ci-run'], arm64Run: values['arm64-run'], attested: values.attested };
-    writeFileSync(values.notes, notes(version, chromiumVersion, origin, files));
+    writeFileSync(values.notes, notes(version, chromiumVersion, values['previous-chromium'], changed, origin, files));
   }
   for (const f of files) console.log(`${f.file} ${(f.size / 1e6).toFixed(1)} MB ${f.sha256}`);
 }

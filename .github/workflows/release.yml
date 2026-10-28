@@ -10,7 +10,7 @@ run-name: "Release from ci ${{ inputs.ci_run }} and arm64 ${{ inputs.arm64_run }
 #   gh workflow run release.yml -f ci_run=<id> -f arm64_run=<id> -f confirm=release
 #
 # A dry run checks and assembles the files, writes the notes in the run's
-# summary, and stops. With "release" typed in, the release is created as a
+# summary, and stops. The notes need the version's section in CHANGELOG.md. With "release" typed in, the release is created as a
 # draft: publishing it, which creates the tag, stays a click of the
 # maintainer's (draft=false publishes at once). The other channels, from the
 # same runs, each by hand: apt.yml (APT repository), npm.yml, docker.yml.
@@ -126,6 +126,8 @@ jobs:
           gh run download "$ARM64_RUN" --repo "$GITHUB_REPOSITORY" --name package-linux-arm64 --dir from/package-linux-arm64
           ls -lR from
 
+      # The notes open with what changed: the Chromium of the latest
+      # release, then CHANGELOG.md's section for this version (none stops it).
       - name: Files, checked against CI's sums, and notes
         env:
           SHA: ${{ steps.runs.outputs.sha }}
@@ -133,8 +135,15 @@ jobs:
         run: |
           attested=
           [ "$PRIVATE" = false ] && attested=--attested
+          previous=
+          latest="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName // empty')"
+          if [ -n "$latest" ]; then
+            previous="$(gh api "repos/$GITHUB_REPOSITORY/contents/chromium.json?ref=$latest" -H 'Accept: application/vnd.github.raw' --jq .version)"
+            echo "latest release $latest, Chromium $previous"
+          fi
           node dist/scripts/release.js --from from --out release --notes notes.md \
-            --repo "$GITHUB_REPOSITORY" --commit "$SHA" --ci-run "$CI_RUN" --arm64-run "$ARM64_RUN" $attested
+            --repo "$GITHUB_REPOSITORY" --commit "$SHA" --ci-run "$CI_RUN" --arm64-run "$ARM64_RUN" \
+            --previous-chromium "$previous" $attested
           cat release/SHA256SUMS
           cat notes.md >> "$GITHUB_STEP_SUMMARY"
 
