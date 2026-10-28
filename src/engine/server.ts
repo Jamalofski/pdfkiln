@@ -308,6 +308,9 @@ export async function serve(opts: ServeOptions): Promise<number> {
     child.stderr!.on('data', (d) => (stderr += d));
     const toChromium = child.stdio[3] as NodeJS.WritableStream;
     const fromChromium = child.stdio[4] as NodeJS.ReadableStream;
+    // A Chromium gone breaks its pipes (EPIPE): its exit tells why.
+    toChromium.on('error', () => {});
+    fromChromium.on('error', () => {});
     const mux = new Mux((m) => toChromium.write(`${m}\0`));
     // Chromium answers its first message, id 0, before anything is served.
     let answered: () => void = () => {};
