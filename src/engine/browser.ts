@@ -34,10 +34,33 @@ export function windowsServerCore(): boolean {
   }
 }
 
+// The shared libraries Chromium needs and the system lacks, from ldd: on
+// Linux, the archive and the Composer package hold Chromium but not them,
+// and a Chromium that cannot load one exits before DevTools answers, so
+// Puppeteer only says "Target closed". Read once Chromium has failed.
+export function missingLibraries(exe: string): string[] {
+  if (process.platform !== 'linux') return [];
+  try {
+    return parseLdd(execFileSync('ldd', [exe], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }));
+  } catch {
+    return [];
+  }
+}
+
+export function parseLdd(out: string): string[] {
+  return [...new Set([...out.matchAll(/^\s*(\S+) => not found\s*$/gm)].map((m) => m[1]!))];
+}
+
 // Explains the usual reasons Chromium cannot start, with the fix.
-export function explain(message: string, serverCore: () => boolean = windowsServerCore): string {
+export function explain(message: string, serverCore: () => boolean = windowsServerCore, missing: () => string[] = () => []): string {
   if (serverCore()) {
     return 'Chromium does not run on Windows Server Core: it stops at start, for want of system libraries. Use Windows Server with the Desktop Experience, or the mcr.microsoft.com/windows/server container image rather than servercore.';
+  }
+  const libs = missing();
+  const loader = /error while loading shared libraries: ([^:\s]+)/.exec(message);
+  if (loader && !libs.includes(loader[1]!)) libs.push(loader[1]!);
+  if (libs.length) {
+    return `Chromium cannot start: the system lacks ${libs.join(', ')}. The Debian package installs Chromium's libraries; with the archive or the Composer package, install them first (README, Installation, Linux and macOS archives).`;
   }
   if (/as root without --no-sandbox/i.test(message)) {
     return 'Chromium refuses to run as root with its sandbox on. Run the command as an unprivileged user (or pass --kiln-no-sandbox, not recommended).';
@@ -131,7 +154,7 @@ export async function launch(opts: LaunchOptions): Promise<Session> {
     });
   } catch (e) {
     removeQuietly(profile);
-    throw new LaunchError(explain(e instanceof Error ? e.message : String(e)));
+    throw new LaunchError(explain(e instanceof Error ? e.message : String(e), windowsServerCore, () => missingLibraries(exe)));
   }
   const pid = browser.process()?.pid;
   let closed = false;

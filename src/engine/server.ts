@@ -16,7 +16,7 @@ import { tmpdir, userInfo } from 'node:os';
 import { join } from 'node:path';
 import puppeteer, { type Browser, type ConnectionTransport } from 'puppeteer-core';
 import { ensureChromium, userCacheDir } from '../chromium.js';
-import { explain, killTree, LaunchError, removeWhenFree } from './browser.js';
+import { explain, killTree, LaunchError, missingLibraries, removeWhenFree, windowsServerCore } from './browser.js';
 
 // PDFKILN_SERVER: the socket, or "off" not to look for a server.
 export function socketPath(): string | null {
@@ -320,7 +320,7 @@ export async function serve(opts: ServeOptions): Promise<number> {
       }
     }));
     await new Promise<void>((ok, fail) => {
-      const onExit = () => fail(new LaunchError(explain(stderr || 'Chromium exited')));
+      const onExit = () => fail(new LaunchError(explain(stderr || 'Chromium exited', windowsServerCore, () => missingLibraries(exe))));
       child.once('exit', onExit);
       answered = () => {
         child.off('exit', onExit);

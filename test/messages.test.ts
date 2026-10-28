@@ -1,7 +1,7 @@
 // What wkhtmltopdf writes on stderr and how it exits.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { explain } from '../src/engine/browser.js';
+import { explain, parseLdd } from '../src/engine/browser.js';
 import { Feedback } from '../src/wk/feedback.js';
 import { handleError, qtErrorForHttpStatus } from '../src/wk/qtnet.js';
 
@@ -21,6 +21,26 @@ test('Chromium that does not start: the reason, with the fix', () => {
   assert.equal(explain(closed, () => false), `Chromium did not start: ${closed}`);
   assert.match(explain(closed, () => true), /^Chromium does not run on Windows Server Core: .* Desktop Experience/);
   assert.match(explain('Running as root without --no-sandbox is not supported', () => false), /refuses to run as root/);
+});
+
+test('Chromium that lacks a system library: named, from ldd or the loader', () => {
+  // Lines of ldd for chrome-headless-shell 156 on Ubuntu 24.04 (WSL), without
+  // libasound2t64 (28/10/2026); a library may come twice.
+  const ldd = [
+    '\tlinux-vdso.so.1 (0x00007ffd315df000)',
+    '\tlibdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007fbe5a23d000)',
+    '\tlibnspr4.so => /lib/x86_64-linux-gnu/libnspr4.so (0x00007fbe5a04d000)',
+    '\tlibasound.so.2 => not found',
+    '\tlibasound.so.2 => not found',
+  ].join('\n');
+  assert.deepEqual(parseLdd(ldd), ['libasound.so.2']);
+  const closed = 'Protocol error (Target.setDiscoverTargets): Target closed';
+  assert.match(explain(closed, () => false, () => parseLdd(ldd)), /^Chromium cannot start: the system lacks libasound\.so\.2\. The Debian package/);
+  // pdfkiln serve reads Chromium's stderr: the loader's own message.
+  const loader = 'chrome-headless-shell: error while loading shared libraries: libasound.so.2: cannot open shared object file: No such file or directory';
+  assert.match(explain(loader, () => false), /the system lacks libasound\.so\.2\./);
+  assert.match(explain(loader, () => false, () => ['libasound.so.2', 'libgbm.so.1']), /lacks libasound\.so\.2, libgbm\.so\.1\./);
+  assert.equal(explain(closed, () => false, () => []), `Chromium did not start: ${closed}`);
 });
 
 test('phases, padded over the progress bar', () => {
