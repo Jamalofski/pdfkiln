@@ -34,6 +34,8 @@ writeFileSync(join(root, 'README.md'), `# pdfkiln
 
 Drop-in replacement for wkhtmltopdf, powered by Chromium.
 
+Documentation and migration guides: https://pdfkiln.org
+
 \`npx @pdfkiln/pdfkiln wkhtmltopdf page.html page.pdf\`, or \`npm install -g @pdfkiln/pdfkiln\` for the three commands:
 
 - \`wkhtmltopdf\` and \`wkhtmltoimage\` accept the command lines of wkhtmltopdf and wkhtmltoimage 0.12.6, with the same options, defaults, messages and exit codes;
@@ -51,6 +53,8 @@ writeFileSync(join(root, 'package.json'), `${JSON.stringify({
   version,
   description: dev.description,
   license: dev.license,
+  homepage: 'https://pdfkiln.org',
+  bugs: { url: 'https://github.com/Jamalofski/pdfkiln/issues' },
   repository: { type: 'git', url: 'git+https://github.com/Jamalofski/pdfkiln.git' },
   bin: { pdfkiln: 'dist/bundle/pdfkiln.cjs', wkhtmltopdf: 'dist/bundle/wkhtmltopdf.cjs', wkhtmltoimage: 'dist/bundle/wkhtmltoimage.cjs' },
   files: ['dist/bundle/*.cjs', 'chromium.json', 'licenses/'],

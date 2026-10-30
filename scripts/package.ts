@@ -65,6 +65,7 @@ writeFileSync(join(top, 'README.txt'), `pdfkiln ${version}, Chromium ${chromiumV
 Called as wkhtmltopdf or wkhtmltoimage, pdfkiln accepts the command line of
 wkhtmltopdf or wkhtmltoimage 0.12.6; called as pdfkiln, it offers its own interface (pdfkiln --help).
 pdfkiln is not affiliated with the wkhtmltopdf project.
+Documentation: https://pdfkiln.org
 `);
 
 // The archive and its checksum.

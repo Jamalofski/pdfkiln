@@ -2,6 +2,8 @@
 
 Drop-in replacement for wkhtmltopdf, powered by Chromium.
 
+Site, documentation and migration guides: [pdfkiln.org](https://pdfkiln.org)
+
 wkhtmltopdf is archived: its last release, 0.12.6, dates from June 2020, on a Qt WebKit that gets no security fixes. Yet pdfkit, knp-snappy, laravel-snappy, phpwkhtmltopdf, wicked_pdf, Rotativa, Odoo and ERPNext still call it. pdfkiln takes its place without a line of your code changing: the same command line, a current Chromium underneath.
 
 - **Same command line**: the 122 options of wkhtmltopdf 0.12.6, its defaults, messages and exit codes.
@@ -79,18 +81,18 @@ Each release is built and tested by CI, then published by hand from two green ru
 
 ## Migrating
 
-Point the library at pdfkiln's `wkhtmltopdf` or `wkhtmltoimage`, never at `pdfkiln`: called by that name, it switches to its own interface.
+Point the library at pdfkiln's `wkhtmltopdf` or `wkhtmltoimage`, never at `pdfkiln`: called by that name, it switches to its own interface. A step-by-step guide for each library is on the site: [pdfkiln.org/migrate](https://pdfkiln.org/migrate/).
 
 | Library | Setting |
 | --- | --- |
-| knp-snappy | `new Knp\Snappy\Pdf('/usr/bin/wkhtmltopdf')`; with the Composer package, `new Knp\Snappy\Pdf(Pdfkiln\binary())` |
-| laravel-snappy | `WKHTML_PDF_BINARY=/usr/bin/wkhtmltopdf` in `.env` (`config/snappy.php`, `pdf.binary`) |
-| phpwkhtmltopdf | `new mikehaertl\wkhtmlto\Pdf(['binary' => '/usr/bin/wkhtmltopdf'])`, or nothing if it is in the `PATH` |
-| pdfkit (Python) | `pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')`, or nothing if it is in the `PATH` |
-| wicked_pdf | `WickedPdf.config = { exe_path: '/usr/bin/wkhtmltopdf' }` in an initializer; drop the `wkhtmltopdf-binary` gem |
-| imgkit (Python) | `imgkit.config(wkhtmltoimage='/usr/bin/wkhtmltoimage')`, or nothing if it is in the `PATH` |
-| Odoo, Frappe / ERPNext | nothing: they find `wkhtmltopdf` in the `PATH` |
-| Rotativa (ASP.NET) | copy the content of `wkhtmltopdf\bin` (the programs and `chromium\`) into the Rotativa folder; tested with Rotativa.AspNetCore's driver, and in IIS as the application pool's identity on Windows Server with the Desktop Experience (not on Server Core, see Installation) |
+| [knp-snappy](https://pdfkiln.org/migrate/knp-snappy/) | `new Knp\Snappy\Pdf('/usr/bin/wkhtmltopdf')`; with the Composer package, `new Knp\Snappy\Pdf(Pdfkiln\binary())` |
+| [laravel-snappy](https://pdfkiln.org/migrate/laravel-snappy/) | `WKHTML_PDF_BINARY=/usr/bin/wkhtmltopdf` in `.env` (`config/snappy.php`, `pdf.binary`) |
+| [phpwkhtmltopdf](https://pdfkiln.org/migrate/phpwkhtmltopdf/) | `new mikehaertl\wkhtmlto\Pdf(['binary' => '/usr/bin/wkhtmltopdf'])`, or nothing if it is in the `PATH` |
+| [pdfkit](https://pdfkiln.org/migrate/pdfkit/) (Python) | `pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')`, or nothing if it is in the `PATH` |
+| [wicked_pdf](https://pdfkiln.org/migrate/wicked-pdf/) | `WickedPdf.config = { exe_path: '/usr/bin/wkhtmltopdf' }` in an initializer; drop the `wkhtmltopdf-binary` gem |
+| [imgkit](https://pdfkiln.org/migrate/imgkit/) (Python) | `imgkit.config(wkhtmltoimage='/usr/bin/wkhtmltoimage')`, or nothing if it is in the `PATH` |
+| [Odoo](https://pdfkiln.org/migrate/odoo/), [Frappe / ERPNext](https://pdfkiln.org/migrate/frappe/) | nothing: they find `wkhtmltopdf` in the `PATH` |
+| [Rotativa](https://pdfkiln.org/migrate/rotativa/) (ASP.NET) | copy the content of `wkhtmltopdf\bin` (the programs and `chromium\`) into the Rotativa folder; tested with Rotativa.AspNetCore's driver, and in IIS as the application pool's identity on Windows Server with the Desktop Experience (not on Server Core, see Installation) |
 
 With the Debian package, `/usr/bin/wkhtmltopdf` is already in the `PATH`. Libraries that read the version keep working: `wkhtmltopdf --version` prints `wkhtmltopdf 0.12.6 (with patched qt), pdfkiln <version>, Chromium <version>`.
 

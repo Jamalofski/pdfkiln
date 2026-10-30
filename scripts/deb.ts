@@ -130,6 +130,7 @@ writeFileSync(join(debian, 'control'), `Package: pdfkiln
 Version: ${debVersion}
 Architecture: ${arch}
 Maintainer: Jamal Tantaoui <contact@pdfkiln.org>
+Homepage: https://pdfkiln.org
 Installed-Size: ${Math.ceil(size(join(root, 'usr')) / 1024)}
 Depends: ${depends.join(', ')}
 Provides: wkhtmltopdf

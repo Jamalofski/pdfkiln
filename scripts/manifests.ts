@@ -13,6 +13,7 @@ import { parseArgs } from 'node:util';
 import { repoRoot } from '../src/chromium.js';
 
 export const REPO = 'https://github.com/Jamalofski/pdfkiln';
+export const SITE = 'https://pdfkiln.org';
 const DESCRIPTION = 'Drop-in replacement for wkhtmltopdf, powered by Chromium';
 
 // "<sha>  <file>" lines of the .sha256 files, by file name.
@@ -44,7 +45,7 @@ export function manifests(version: string, sums: Record<string, string>): Manife
   out['scoop/pdfkiln.json'] = `${JSON.stringify({
     version,
     description: DESCRIPTION,
-    homepage: REPO,
+    homepage: SITE,
     license: 'MIT',
     architecture: { '64bit': { url: `${url}/${zip}`, hash: sum(zip) } },
     extract_dir: 'wkhtmltopdf',
@@ -80,7 +81,7 @@ ManifestVersion: 1.6.0
 Publisher: Jamalofski
 PublisherUrl: https://github.com/Jamalofski
 PackageName: pdfkiln
-PackageUrl: ${REPO}
+PackageUrl: ${SITE}
 License: MIT
 LicenseUrl: ${REPO}/blob/main/LICENSE
 ShortDescription: ${DESCRIPTION}
@@ -101,7 +102,7 @@ ManifestVersion: 1.6.0
   if (!mac.length) throw new Error('no SHA-256 for a macOS archive');
   out['homebrew/Formula/pdfkiln.rb'] = `class Pdfkiln < Formula
   desc "${DESCRIPTION}"
-  homepage "${REPO}"
+  homepage "${SITE}"
   version "${version}"
   license "MIT"
 
@@ -151,11 +152,12 @@ end
     description: `${DESCRIPTION}: vendor/bin/wkhtmltopdf and vendor/bin/wkhtmltoimage, downloaded on first use`,
     type: 'library',
     keywords: ['wkhtmltopdf', 'wkhtmltoimage', 'pdf', 'chromium'],
-    homepage: REPO,
+    homepage: SITE,
     license: 'MIT',
     require: { php: '>=7.4' },
     autoload: { files: ['src/launch.php'] },
     bin: ['bin/wkhtmltopdf', 'bin/wkhtmltoimage', 'bin/pdfkiln'],
+    support: { issues: `${REPO}/issues`, source: REPO },
   }, null, 4)}\n`;
   return out;
 }

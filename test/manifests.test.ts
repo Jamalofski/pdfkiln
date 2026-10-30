@@ -1,7 +1,7 @@
 // The channel manifests, written from a release's SHA-256 sums.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { manifests, REPO } from '../scripts/manifests.js';
+import { manifests, REPO, SITE } from '../scripts/manifests.js';
 
 const files = ['linux-x64.tar.gz', 'linux-arm64.tar.gz', 'macos-x64.tar.gz', 'macos-arm64.tar.gz', 'windows-x64.zip', 'windows-x64-setup.exe']
   .map((f) => `pdfkiln-1.2.3-${f}`);
@@ -42,4 +42,14 @@ test('the formula has the macOS archives there are', () => {
   const formula = manifests('1.2.3', armOnly)['homebrew/Formula/pdfkiln.rb']!;
   assert.match(formula, /on_arm do/);
   assert.doesNotMatch(formula, /on_intel/);
+});
+
+test('the site is the home page; GitHub keeps the downloads, the issues and the source', () => {
+  const m = manifests('1.2.3', sums);
+  assert.equal(JSON.parse(m['scoop/pdfkiln.json']!).homepage, SITE);
+  assert.match(m['winget/manifests/j/Jamalofski/pdfkiln/1.2.3/Jamalofski.pdfkiln.locale.en-US.yaml']!, /PackageUrl: https:\/\/pdfkiln\.org\n/);
+  assert.match(m['homebrew/Formula/pdfkiln.rb']!, /homepage "https:\/\/pdfkiln\.org"/);
+  const composer = JSON.parse(m['composer/composer.json']!);
+  assert.equal(composer.homepage, SITE);
+  assert.deepEqual(composer.support, { issues: `${REPO}/issues`, source: REPO });
 });

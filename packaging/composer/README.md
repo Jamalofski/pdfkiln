@@ -1,6 +1,6 @@
 # pdfkiln for Composer
 
-`vendor/bin/wkhtmltopdf` and `vendor/bin/wkhtmltoimage`: [pdfkiln](https://github.com/Jamalofski/pdfkiln), a drop-in replacement for wkhtmltopdf 0.12.6 rendered by Chromium.
+`vendor/bin/wkhtmltopdf` and `vendor/bin/wkhtmltoimage`: [pdfkiln](https://pdfkiln.org), a drop-in replacement for wkhtmltopdf 0.12.6 rendered by Chromium.
 
 ```
 composer require pdfkiln/pdfkiln

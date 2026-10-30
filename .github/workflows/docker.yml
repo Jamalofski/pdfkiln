@@ -117,6 +117,8 @@ jobs:
             ${{ steps.image.outputs.name }}:latest
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.url=https://pdfkiln.org
+            org.opencontainers.image.documentation=https://pdfkiln.org/wkhtmltopdf/docker/
             org.opencontainers.image.revision=${{ steps.runs.outputs.sha }}
             org.opencontainers.image.version=${{ steps.image.outputs.version }}
             org.opencontainers.image.licenses=MIT
