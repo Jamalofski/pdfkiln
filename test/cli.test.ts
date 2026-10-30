@@ -648,10 +648,9 @@ describe('native interface', () => {
 
   test('private addresses are refused by default: such an input fails, without PDF', async () => {
     const out = join(dir, 'native-private.pdf');
-    // --block-private-network, the default, stays for conv2pdf.
     // An address is private, a name resolves to one.
-    for (const [flags, url, host] of [[[], `${base}/ok`, '127.0.0.1 is'], [[], `${other}/ok`, 'localhost resolves to'], [['--block-private-network'], `${base}/ok`, '127.0.0.1 is']] as const) {
-      const r = await native([...flags, url, out]);
+    for (const [url, host] of [[`${base}/ok`, '127.0.0.1 is'], [`${other}/ok`, 'localhost resolves to']] as const) {
+      const r = await native([url, out]);
       assert.equal(r.code, 1, r.stderr);
       assert.ok(!existsSync(out), 'no PDF');
       assert.equal(r.stderr, `pdfkiln: error: could not load ${url}: ${host} a private address (--allow-private-network to reach it)\n`);

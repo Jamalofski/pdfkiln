@@ -130,9 +130,6 @@ export async function nativeMain(args: string[]): Promise<number> {
         allow: { type: 'string', multiple: true },
         'enable-local-file-access': { type: 'boolean' },
         'allow-private-network': { type: 'boolean' },
-        // Deprecated, out of the help: the default now, kept for the calls
-        // that pass it (conv2pdf) until a future version removes it.
-        'block-private-network': { type: 'boolean' },
         timeout: { type: 'string' },
         'no-sandbox': { type: 'boolean' },
         quiet: { type: 'boolean', short: 'q' },
@@ -173,8 +170,7 @@ export async function nativeMain(args: string[]): Promise<number> {
     stderr('pdfkiln: --tagged takes one input: the structure trees of several documents are not merged yet\n');
     return 1;
   }
-  // --block-private-network wins over --allow-private-network.
-  const blockPrivate = Boolean(v['block-private-network']) || !v['allow-private-network'];
+  const blockPrivate = !v['allow-private-network'];
 
   let relay: Relay | undefined;
   // Why a request did not load, in a few words. The relay knows why it
