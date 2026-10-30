@@ -40,6 +40,11 @@ export interface LoadSpec {
 // Media files: their load errors follow --load-media-error-handling.
 const MEDIA = new Set(['css', 'js', 'png', 'jpg', 'jpeg', 'gif']);
 
+// Beacons and CSP reports load nothing into the page, and wkhtmltopdf's
+// WebKit never sent them: their errors are not the page's, and the wait
+// does not wait for them.
+const isReport = (type?: string) => type === 'Ping' || type === 'CSPViolationReport';
+
 // QFileInfo(url).completeSuffix(): what follows the first dot of the name.
 function completeSuffix(url: string): string {
   const name = url.split('/').pop() ?? '';
@@ -127,25 +132,54 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
   // requests answered here, reported when answered.
   const urls = new Map<string, string>();
   const answered = new Set<string>();
+  const reports = new Set<string>();
   let mainDocument = '';
   // Requests still in flight: the page may yet change.
   const inflight = new Set<string>();
-  cdp.on('Network.requestWillBeSent', (e: { requestId: string; request: { url: string }; type?: string; frameId?: string }) => {
+  cdp.on('Network.requestWillBeSent', (e: { requestId: string; request: { url: string; headers: Record<string, string> }; type?: string; frameId?: string }) => {
     urls.set(e.requestId, e.request.url);
-    if (!e.request.url.startsWith('data:')) inflight.add(e.requestId);
+    // The Network domain types a CSP report "Other", the Fetch domain
+    // "CSPViolationReport".
+    if (isReport(e.type) || /^application\/csp-report/i.test(e.request.headers['Content-Type'] ?? '')) reports.add(e.requestId);
+    else if (!e.request.url.startsWith('data:')) inflight.add(e.requestId);
     if (!mainDocument && e.type === 'Document') mainDocument = e.requestId;
   });
   cdp.on('Network.loadingFinished', (e: { requestId: string }) => inflight.delete(e.requestId));
-  cdp.on('Network.responseReceived', (e: { requestId: string; response: { url: string; status: number; statusText: string } }) => {
-    const { url, status, statusText } = e.response;
-    if (!/^https?:/.test(url) || status < 400 || answered.has(e.requestId)) return;
+  const httpError = (url: string, status: number, statusText: string) => {
     const ns = qtErrorForHttpStatus(status);
     fail(url, ns, status, qtErrorString(ns, url, status, statusText || httpReason(status)));
+  };
+  cdp.on('Network.responseReceived', (e: { requestId: string; response: { url: string; status: number; statusText: string } }) => {
+    const { url, status, statusText } = e.response;
+    if (!/^https?:/.test(url) || status < 400 || answered.has(e.requestId) || reports.has(e.requestId)) return;
+    httpError(url, status, statusText);
   });
-  cdp.on('Network.loadingFailed', (e: { requestId: string; errorText: string; canceled?: boolean; blockedReason?: string }) => {
+  // A response Chromium keeps from the page gets no responseReceived: its
+  // status comes from the network service, before or after the failure.
+  // wkhtmltopdf's WebKit read it. Blocked by ORB or CORP (HTML for an
+  // image), it was a response like any other; failing CORS (an API without
+  // CORS headers), it was canceled once its status came, which reports an
+  // error status only (measured on 0.12.6).
+  const statuses = new Map<string, number>();
+  const withheld = new Map<string, (status: number) => void>();
+  cdp.on('Network.responseReceivedExtraInfo', (e: { requestId: string; statusCode: number }) => {
+    statuses.set(e.requestId, e.statusCode);
+    withheld.get(e.requestId)?.(e.statusCode);
+  });
+  cdp.on('Network.loadingFailed', (e: { requestId: string; errorText: string; canceled?: boolean; blockedReason?: string; corsErrorStatus?: object }) => {
     inflight.delete(e.requestId);
     const url = urls.get(e.requestId) ?? '';
-    if (!/^https?:/.test(url) || answered.has(e.requestId) || e.blockedReason || e.errorText === 'net::ERR_BLOCKED_BY_CLIENT') return;
+    if (!/^https?:/.test(url) || answered.has(e.requestId) || reports.has(e.requestId) || e.errorText === 'net::ERR_BLOCKED_BY_CLIENT') return;
+    if (e.blockedReason || e.corsErrorStatus || e.errorText === 'net::ERR_BLOCKED_BY_ORB') {
+      const read = (status: number) => {
+        if (e.corsErrorStatus) fail(url, 5, status, qtErrorString(5, url, status, ''));
+        else if (status >= 400) httpError(url, status, '');
+      };
+      const status = statuses.get(e.requestId);
+      if (status === undefined) withheld.set(e.requestId, read);
+      else read(status);
+      return;
+    }
     const ns = e.canceled ? 5 : qtErrorForChromium(e.errorText);
     // Qt never reported a refused connection on the page itself.
     if (e.requestId === mainDocument && ns === 1) return;
@@ -257,7 +291,7 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
       const responseHeaders = r.headers
         .filter(([k]) => !/^(content-encoding|content-length|transfer-encoding|connection|keep-alive)$/i.test(k))
         .map(([name, value]) => ({ name, value }));
-      if (r.status >= 400) fail(request.url, qtErrorForHttpStatus(r.status), r.status, qtErrorString(qtErrorForHttpStatus(r.status), request.url, r.status, r.statusText));
+      if (r.status >= 400 && !isReport(e.resourceType)) fail(request.url, qtErrorForHttpStatus(r.status), r.status, qtErrorString(qtErrorForHttpStatus(r.status), request.url, r.status, r.statusText));
       let data = r.body;
       if (rewrite && e.resourceType === 'Stylesheet' && r.status < 300) data = Buffer.from(rewriteCss(data.toString('utf8'), rewrite));
       if (e.resourceType === 'Font') responseHeaders.push({ name: 'Access-Control-Allow-Origin', value: '*' });
@@ -267,7 +301,7 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
       // proxy's refusal for a blocked address, the handshake.
       const code = (err as { code?: string }).code;
       const ns = code === 'ENOTFOUND' ? 3 : code === 'ECONNREFUSED' ? 1 : code === 'ECONNRESET' ? 2 : err instanceof BlockedAddress ? 102 : 6;
-      fail(request.url, ns, 0, qtErrorString(ns, request.url, 0, ''));
+      if (!isReport(e.resourceType)) fail(request.url, ns, 0, qtErrorString(ns, request.url, 0, ''));
       await cdp.send('Fetch.failRequest', { requestId, errorReason: 'Failed' });
     }
   };

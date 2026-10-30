@@ -8,6 +8,7 @@ release.
 ## 1.0.5
 
 - The PDFs no longer say which versions made them: Creator is `pdfkiln` and Producer `pdfkiln.org`, in every mode (wkhtmltopdf, native, `pdfkiln serve`). Up to 1.0.4, they gave the versions of pdfkiln and Chromium, which tell anyone who receives a PDF whether the server that made it still runs a Chromium with known flaws.
+- A page's CSP reports and beacons, and the responses Chromium keeps from it (HTML for an image, an API without CORS headers), no longer fail the conversion. On https://www.google.fr, whose CSP reports Chromium sends and wkhtmltopdf 0.12.6 did not, pdfkiln called as wkhtmltopdf exited 1 with "network status code 99", a failure for the libraries; called as pdfkiln, it printed an error. A response kept from the page with an HTTP error fails as with wkhtmltopdf: same message, same exit code.
 
 ## 1.0.4
 

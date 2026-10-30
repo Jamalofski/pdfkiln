@@ -80,6 +80,7 @@ export function qtErrorString(code: number, url: string, status: number, statusT
     case 2: return 'Connection closed';
     case 3: return `Host ${host} not found`;
     case 4: return 'Socket operation timed out';
+    case 5: return 'Operation canceled';
     case 6: return 'SSL handshake failed';
     case 204: return 'Host requires authentication';
     case 301: return `Protocol "${(url.split(':')[0] ?? '')}" is unknown`;

@@ -68,6 +68,8 @@ const file = (name: string, content: string) => {
 
 let server: Server;
 let base = '';
+// The same server under another origin.
+let other = '';
 let hangs: (() => void)[] = [];
 // X-Test as the last /img request carried it.
 let imgHeader = '';
@@ -86,6 +88,18 @@ before(async () => {
     }
     if (path === '/404') return html('missing', 404);
     if (path === '/css404') return html('<link rel="stylesheet" href="/nope.css">styled');
+    // What Chromium sends and wkhtmltopdf's WebKit did not: CSP reports, one
+    // answered as google.com answers them (204, text/html, nosniff: ORB
+    // blocks it), one unreachable, and a beacon. And what it keeps from the
+    // page: HTML for an image (ORB), a response without CORS headers.
+    if (path === '/extras') {
+      return res.writeHead(200, { 'content-type': 'text/html', 'content-security-policy-report-only': `script-src 'none'; report-uri ${other}/report http://pdfkiln-nonexistent.invalid/report` })
+        .end(`<p>extras</p><img src="${other}/ok"><script>navigator.sendBeacon('http://pdfkiln-nonexistent.invalid/beacon', 'x'); fetch('${other}/ok').catch(() => {});</script>`);
+    }
+    if (path === '/report') return res.writeHead(204, { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff' }).end();
+    // The same, in 404: HTML for an image, a request without CORS headers.
+    if (path === '/withheld404') return html(`<img src="${other}/404">`);
+    if (path === '/cors404') return html(`<script>const x = new XMLHttpRequest(); x.open('GET', '${other}/404'); x.send();</script>`);
     if (path === '/headers') return html(`<p>X-Test=${req.headers['x-test'] ?? 'none'}</p><img src="/img">`);
     if (path === '/img') imgHeader = String(req.headers['x-test'] ?? 'none');
     if (path === '/img') return res.writeHead(200, { 'content-type': 'image/svg+xml' }).end(`<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><text y="10">${req.headers['x-test'] ?? 'none'}</text></svg>`);
@@ -98,6 +112,7 @@ before(async () => {
   await new Promise<void>((ok) => server.listen(0, '127.0.0.1', ok));
   const a = server.address();
   base = `http://127.0.0.1:${typeof a === 'object' && a ? a.port : 0}`;
+  other = base.replace('127.0.0.1', 'localhost');
 });
 after(() => {
   for (const h of hangs) h();
@@ -152,6 +167,22 @@ describe('interface', () => {
     const r = await run(['--log-level', 'warn', `${base}/css404`, join(dir, 'css.pdf')]);
     assert.equal(r.code, 0);
     assert.equal(r.stderr, `Warning: Failed to load ${base}/nope.css (ignore)\n`);
+  });
+
+  test('beacons, CSP reports and responses Chromium keeps from the page are not load errors', async () => {
+    const r = await run(['--log-level', 'warn', `${base}/extras`, join(dir, 'extras.pdf')]);
+    assert.equal(r.code, 0);
+    assert.equal(r.stderr, '');
+  });
+
+  test('a response Chromium keeps from the page fails as wkhtmltopdf 0.12.6 read it', async () => {
+    let r = await run(['--log-level', 'warn', `${base}/withheld404`, join(dir, 'withheld.pdf')]);
+    assert.equal(r.code, 1);
+    assert.equal(r.stderr, `Error: Failed to load ${other}/404, with network status code 203 and http status code 404 - Error downloading ${other}/404 - server replied: Not Found\nExit with code 1 due to network error: ContentNotFoundError\n`);
+    // Its WebKit canceled a response failing CORS once it had the status.
+    r = await run(['--log-level', 'warn', `${base}/cors404`, join(dir, 'withheld.pdf')]);
+    assert.equal(r.code, 1);
+    assert.equal(r.stderr, `Error: Failed to load ${other}/404, with network status code 5 and http status code 404 - Operation canceled\nExit with code 1 due to network error: OperationCanceledError\n`);
   });
 
   test('an unknown host: exit 1, no PDF', async () => {
@@ -596,6 +627,12 @@ describe('native interface', () => {
     const text = pagesText(out)[0]!;
     assert.match(text, /start early/);
     assert.doesNotMatch(text, /late/);
+  });
+
+  test('beacons, CSP reports and responses Chromium keeps from the page are not errors', async () => {
+    const r = await native([`${base}/extras`, join(dir, 'native-extras.pdf')]);
+    assert.equal(r.code, 0);
+    assert.equal(r.stderr, '');
   });
 
   test('pdfkiln wkhtmltopdf switches to the compatible mode', async () => {
