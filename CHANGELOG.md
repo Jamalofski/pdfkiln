@@ -7,22 +7,27 @@ release.
 
 ## 1.1.0
 
-Called as `pdfkiln`, five changes break commands that worked with 1.0.4; called as `wkhtmltopdf`, nothing changes. What to do for each:
+Called as `wkhtmltopdf`, nothing breaks. Called as `pdfkiln`, five changes break commands that worked with 1.0.4; each says what to do.
 
-- Private addresses are refused by default: give `--allow-private-network` to a page that loads from localhost or a private network.
-- `--block-private-network` is gone, the refusal being the default: remove it from your commands, where pdfkiln now rejects it as an unknown option.
-- An input that does not load fails, exit 1 and no PDF, where 1.0.4 wrote a blank page and exited 0: test the exit code.
-- The messages on stderr are new: a program that reads them reads `could not load <input>: <why>`.
-- An input is a URL only with its scheme: write `https://www.example.com`, not `www.example.com`.
+In every mode:
 
-All the changes:
+- Pages that send CSP reports or beacons (https://www.google.fr), or whose responses Chromium blocks (HTML for an image, an API without CORS headers), no longer fail the conversion: called as `wkhtmltopdf`, pdfkiln exited 1 with "network status code 99". An HTTP error on such a response still fails, as with wkhtmltopdf.
+- The PDFs no longer give the versions of pdfkiln and Chromium, which told whoever receives one whether the server runs a Chromium with known flaws: Creator is `pdfkiln`, Producer `pdfkiln.org`.
 
-- The PDFs no longer say which versions made them: Creator is `pdfkiln` and Producer `pdfkiln.org`, in every mode (wkhtmltopdf, native, `pdfkiln serve`). Up to 1.0.4, they gave the versions of pdfkiln and Chromium, which tell anyone who receives a PDF whether the server that made it still runs a Chromium with known flaws.
-- A page's CSP reports and beacons, and the responses Chromium keeps from it (HTML for an image, an API without CORS headers), no longer fail the conversion. On https://www.google.fr, whose CSP reports Chromium sends and wkhtmltopdf 0.12.6 did not, pdfkiln called as wkhtmltopdf exited 1 with "network status code 99", a failure for the libraries; called as pdfkiln, it printed an error. A response kept from the page with an HTTP error fails as with wkhtmltopdf: same message, same exit code.
-- Called as `pdfkiln`, private addresses are refused by default: pages reach no loopback, private or link-local address (cloud metadata `169.254.169.254` included) unless `--allow-private-network` is given, a local development server included. `--block-private-network`, which the default replaces, is gone: pdfkiln rejects it as an unknown option. And an input that does not load, refused or in HTTP error, fails: exit 1 and no PDF, where 1.0.4 wrote a blank page and exited 0. Called as `wkhtmltopdf`, nothing changes.
-- Called as `pdfkiln`, the messages are its own. An input that does not load gives one error, `could not load <input>: <why>`; a resource that does not load (an image, a font, a style sheet, a frame, a script's request) gives a warning, `could not load <url>: <why>`, which `-q` hides. The why: `HTTP 404`, `10.0.0.1 is a private address (--allow-private-network to reach it)` or, for a name, `intranet.example.com resolves to a private address (…)`, `host not found`, `connection refused`, `timed out`, `connection closed`, `invalid certificate (net::ERR_CERT_…)`, `no such file`, `not an allowed file (…)`, or, for the rarer ones, Chromium's name for the error. Up to 1.0.4, they were wkhtmltopdf's: a resource it did not count as a media file gave an error though the conversion succeeded, a page that did not load advised `--load-error-handling`, which `pdfkiln` does not have, and with `--block-private-network` a host that does not exist was an HTTP 502. Programs that read these lines have new ones to read.
-- Called as `pdfkiln`, an input is a URL when it starts with `http:`, `https:`, `file:` or `data:`, and a file otherwise. `pdfkiln www.example.com out.pdf`, which 1.0.4 took for http://www.example.com/, now fails with `no such file (a URL starts with https://)`: write `https://www.example.com`. And a missing `report.html` fails with `no such file`, where 1.0.4 looked for http://report.html/.
-- Called as `pdfkiln`, new options for what the page cannot say itself. `--header "name: value"` and `--cookie name=value` go with every request to the input's host, and to no other site: a page behind a login converts. `--wait-for <selector>` waits for an element the page adds once ready, whatever `--javascript-delay`; `--timeout` bounds it. `--css <file>` applies a style sheet after the page's own: paper, margins or what not to print, on a page you do not control. `--media screen` renders the page with its screen rules instead of its print rules.
+Called as `pdfkiln`, what breaks:
+
+- Private addresses (localhost, the private network, `169.254.169.254`) are refused by default: add `--allow-private-network` for a local server or an intranet.
+- `--block-private-network` is gone, the refusal being the default: remove it from your commands.
+- An input that does not load, refused, unreachable or in HTTP error, fails: exit 1 and no PDF, where 1.0.4 wrote a blank page and exited 0. Test the exit code.
+- The messages are pdfkiln's own: one error for an input that does not load, `could not load <input>: <why>` (`HTTP 404`, `host not found`, `no such file`, `10.0.0.1 is a private address`…), and a warning for each resource that does not, which `-q` hides. Programs that read stderr: read these lines.
+- An input without a scheme is a file: write `https://www.example.com`, not `www.example.com`.
+
+Called as `pdfkiln`, what is new:
+
+- `--header "name: value"` and `--cookie name=value`, sent to the input's host only: pages behind a login.
+- `--wait-for <selector>`: waits for an element the page adds once ready; `--timeout` bounds it.
+- `--css <file>`: a style sheet after the page's own, for the paper, the margins or what not to print.
+- `--media screen`: the page's screen rules instead of its print rules.
 
 ## 1.0.4
 
