@@ -712,6 +712,27 @@ jobs:
           dotnet run --project test\rotativa -- "$env:RUNNER_TEMP\site\wkhtmltopdf\bin"
           if ($LASTEXITCODE) { exit 1 }
 
+      # The archive mounted in a Server Core container, run as its
+      # administrator: the account does not matter there. Before IIS: after
+      # Install-WindowsFeature, the runner's Docker engine did not answer
+      # (runs 40693784677 and 41035419682); started if it is stopped.
+      - name: Windows Server Core, the conversion refused with its reason
+        shell: pwsh
+        run: |
+          if ((Get-Service docker).Status -ne 'Running') { Start-Service docker }
+          $site = "$env:RUNNER_TEMP\site"
+          Set-Content "$site\servercore.html" '<h1>Server Core</h1>'
+          $out = docker run --rm -v "${site}:C:\site" mcr.microsoft.com/windows/servercore:ltsc2025 C:\site\wkhtmltopdf\bin\wkhtmltopdf.exe -q C:\site\servercore.html C:\site\servercore.pdf 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          $out
+          if (Test-Path "$site\servercore.pdf") {
+            "Chromium runs on Server Core now: README.md (Installation, Windows) and explain() in src/engine/browser.ts are out of date"
+            exit 1
+          }
+          if ($code -ne 1 -or $out -notmatch 'Chromium does not run on Windows Server Core') { "exit code ${code}: not the expected refusal"; exit 1 }
+          # The step would end with docker's exit code, the expected 1.
+          exit 0
+
       - name: IIS, as the application pool's identity
         shell: powershell
         run: |
@@ -739,21 +760,3 @@ jobs:
           }
           & $appcmd list apppool DefaultAppPool /text:processModel.loadUserProfile
           exit $failed
-
-      # The archive mounted in a Server Core container, run as its
-      # administrator: the account does not matter there.
-      - name: Windows Server Core, the conversion refused with its reason
-        shell: pwsh
-        run: |
-          $site = "$env:RUNNER_TEMP\site"
-          Set-Content "$site\servercore.html" '<h1>Server Core</h1>'
-          $out = docker run --rm -v "${site}:C:\site" mcr.microsoft.com/windows/servercore:ltsc2025 C:\site\wkhtmltopdf\bin\wkhtmltopdf.exe -q C:\site\servercore.html C:\site\servercore.pdf 2>&1 | Out-String
-          $code = $LASTEXITCODE
-          $out
-          if (Test-Path "$site\servercore.pdf") {
-            "Chromium runs on Server Core now: README.md (Installation, Windows) and explain() in src/engine/browser.ts are out of date"
-            exit 1
-          }
-          if ($code -ne 1 -or $out -notmatch 'Chromium does not run on Windows Server Core') { "exit code ${code}: not the expected refusal"; exit 1 }
-          # The step would end with docker's exit code, the expected 1.
-          exit 0
