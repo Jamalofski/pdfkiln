@@ -1,7 +1,8 @@
 // The native interface, called as pdfkiln: Chromium's own rendering, with
 // modern defaults:
-// - pdfkiln <input>... <output>: files, URLs or - (standard input), merged
-//   in order; - as output is the standard output;
+// - pdfkiln <input>... <output>: files, URLs (http:, https:, file:, data:)
+//   or - (standard input), merged in order; - as output is the standard
+//   output;
 // - print media; paper size and margins from the page's @page rule (A4 and
 //   1 cm otherwise), headers and footers from its @page margin boxes;
 // - --tagged keeps the structure tree; --outline adds bookmarks;
@@ -10,27 +11,31 @@
 // - secure by default: a page reads no local file but itself unless --allow
 //   or --enable-local-file-access, and reaches no loopback, private or
 //   link-local address unless --allow-private-network;
-// - an input that does not load fails: exit 1, no PDF.
-import { mkdtempSync, readFileSync, writeFileSync, writeSync } from 'node:fs';
+// - an input that does not load fails: exit 1, no PDF;
+// - its own messages, with why: one error for an input that does not load,
+//   a warning for each resource that does not (-q hides them).
+import { mkdtempSync, readFileSync, statSync, writeFileSync, writeSync } from 'node:fs';
+import { isIP } from 'node:net';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { pathToFileURL } from 'node:url';
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { deadline, launch, LaunchError, removeQuietly, type Session } from '../engine/browser.js';
-import { openPage, type Reporter } from '../engine/loader.js';
-import { startRelay, type Relay } from '../engine/relay.js';
+import { filePath } from '../engine/files.js';
+import { openPage, type Failure, type Reporter } from '../engine/loader.js';
+import { BlockedAddress, startRelay, type Relay } from '../engine/relay.js';
 import { fixDests, merge, moveDest, prune, readOutline, writeOutline, type FinalItem, type OutlineItem } from '../pdf/assemble.js';
 import { chromiumVersion, version } from '../version.js';
 import { defaultObject } from '../wk/settings.js';
-import { guessUrlFromString } from '../wk/urls.js';
 
 const HELP = `Usage: pdfkiln [options] <input>... <output>
 
-Converts HTML to PDF with Chromium. Inputs are files, URLs, or - for the
-standard input; they are merged in order. The output is a file, or - for the
-standard output. Paper size, margins, headers and footers come from the
-page's CSS (@page and its margin boxes); A4 with 1 cm margins otherwise.
+Converts HTML to PDF with Chromium. Inputs are files, URLs (http:, https:,
+file: or data:), or - for the standard input; they are merged in order. The
+output is a file, or - for the standard output. Paper size, margins, headers
+and footers come from the page's CSS (@page and its margin boxes); A4 with
+1 cm margins otherwise.
 
 Options:
   --tagged                  Tagged PDF, readable by screen readers (one input)
@@ -57,6 +62,56 @@ const stderr = (s: string) => writeSync(2, s);
 // The 1 cm margins in points; an @page margin of the page moves its
 // internal links' targets by the difference.
 const CM_PT = 72 / 2.54;
+
+// An input is a URL when it says so, a file otherwise: a missing file is
+// not looked for on the web, as wkhtmltopdf's guess did (report.html as
+// http://report.html/).
+const URL_INPUT = /^(https?|file|data):/i;
+
+// What keeps a file from being an input: missing, or not a file. A missing
+// one named like a host (www.example.com, localhost:8080/page, 10.0.0.5),
+// not like a page (report.html), was meant as a URL.
+function notAFile(input: string, url: string): string {
+  if (!url.startsWith('file:')) return '';
+  const path = filePath(url);
+  const st = path ? statSync(path, { throwIfNoEntry: false }) : undefined;
+  if (st) return st.isFile() ? '' : 'not a file';
+  const host = /^([^/\\:]+)(:\d+)?(\/|$)/.exec(input)?.[1] ?? '';
+  const page = /\.(x?html?|xml|svg|txt|pdf|json|css|js)$/i.test(host);
+  const hostLike = host === 'localhost' || isIP(host) === 4 || (!page && /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(host));
+  return hostLike ? 'no such file (a URL starts with https://)' : 'no such file';
+}
+
+// The usual failures in words; the others as Chromium (net::ERR_…) or the
+// system (EPROTO…) names them.
+const WORDS: Record<string, string> = {
+  'net::ERR_NAME_NOT_RESOLVED': 'host not found',
+  ENOTFOUND: 'host not found',
+  EAI_AGAIN: 'host not found',
+  'net::ERR_CONNECTION_REFUSED': 'connection refused',
+  ECONNREFUSED: 'connection refused',
+  'net::ERR_CONNECTION_TIMED_OUT': 'timed out',
+  'net::ERR_TIMED_OUT': 'timed out',
+  ETIMEDOUT: 'timed out',
+  'net::ERR_CONNECTION_RESET': 'connection closed',
+  'net::ERR_CONNECTION_CLOSED': 'connection closed',
+  'net::ERR_EMPTY_RESPONSE': 'connection closed',
+  // Windows, for a server that closes as soon as it accepts.
+  'net::ERR_CONNECTION_ABORTED': 'connection closed',
+  'net::ERR_SOCKET_NOT_CONNECTED': 'connection closed',
+  ECONNRESET: 'connection closed',
+  'net::ERR_ADDRESS_UNREACHABLE': 'host unreachable',
+  EHOSTUNREACH: 'host unreachable',
+  ENETUNREACH: 'host unreachable',
+  'net::ERR_FILE_NOT_FOUND': 'no such file',
+  'net::ERR_ACCESS_DENIED': 'not an allowed file (--allow <path> or --enable-local-file-access to read it)',
+};
+
+function words(name: string): string {
+  if (name.startsWith('net::ERR_CERT_')) return `invalid certificate (${name})`;
+  if (/^(net::)?ERR_SSL_|^EPROTO$/.test(name)) return `TLS error (${name})`;
+  return WORDS[name] ?? name;
+}
 
 function writeAll(fd: number, data: Uint8Array): void {
   for (let off = 0; off < data.length;) off += writeSync(fd, data, off);
@@ -121,15 +176,36 @@ export async function nativeMain(args: string[]): Promise<number> {
   // --block-private-network wins over --allow-private-network.
   const blockPrivate = Boolean(v['block-private-network']) || !v['allow-private-network'];
 
+  let relay: Relay | undefined;
+  // Why a request did not load, in a few words. The relay knows why it
+  // could not reach a host, where Chromium sees its 403, its 502 or a
+  // closed connection; another status is the server's.
+  const why = (url: string, f: Failure): string => {
+    const host = URL.parse(url)?.hostname ?? '';
+    const e = typeof f === 'number' && f !== 403 && f !== 502 ? f : relay?.failure(host) ?? f;
+    if (e instanceof BlockedAddress) {
+      return `${host} ${isIP(host.replace(/^\[|\]$/g, '')) ? 'is' : 'resolves to'} a private address (--allow-private-network to reach it)`;
+    }
+    if (typeof e === 'number') return `HTTP ${e}`;
+    return words(e instanceof Error ? (e as NodeJS.ErrnoException).code ?? e.message : e);
+  };
+  // Why the current input did not load.
+  let failure = '';
+  const warning = (m: string) => {
+    if (!v.quiet) stderr(`pdfkiln: warning: ${m}\n`);
+  };
   const out: Reporter = {
-    warning: (m) => {
-      if (!v.quiet) stderr(`pdfkiln: warning: ${m}\n`);
-    },
+    warning,
     error: (m) => stderr(`pdfkiln: error: ${m}\n`),
+    // A resource that does not load is a warning; the input itself, the
+    // error below.
+    failed: (url, f, page) => {
+      if (page) failure ||= why(url, f);
+      else warning(`could not load ${url}: ${why(url, f)}`);
+    },
   };
   const work = mkdtempSync(join(tmpdir(), 'pdfkiln-'));
   let session: Session | undefined;
-  let relay: Relay | undefined;
   let stop = () => {};
   try {
     if (blockPrivate) relay = await startRelay();
@@ -154,7 +230,13 @@ export async function nativeMain(args: string[]): Promise<number> {
         const file = join(work, `stdin-${i}.html`);
         writeFileSync(file, stdin);
         url = pathToFileURL(file).href;
-      } else url = guessUrlFromString(input);
+      } else url = URL_INPUT.test(input) ? URL.parse(input)?.href ?? '' : pathToFileURL(resolve(input)).href;
+      const unusable = url ? notAFile(input, url) : 'not a valid URL';
+      if (unusable) {
+        out.error(`could not load ${input}: ${unusable}`);
+        return 1;
+      }
+      failure = '';
       const lp = await openPage(context, {
         url,
         web: base.web,
@@ -164,13 +246,10 @@ export async function nativeMain(args: string[]): Promise<number> {
         viewport: { width: 794, height: 1123 },
         blockPrivateNetwork: blockPrivate,
       }, out);
-      // An input that does not load, or comes in HTTP error (403 for an
-      // address refused here), fails: no PDF of an error page.
+      // An input that does not load, or comes in HTTP error, fails: no PDF
+      // of an error page.
       if (!lp.ok || lp.status >= 400) {
-        const host = new URL(lp.ok ? lp.page.url() : url).hostname;
-        const why = relay?.blocked.includes(host) ? `: ${host} is a private address (--allow-private-network to reach it)`
-          : lp.ok ? `: HTTP ${lp.status}` : '';
-        out.error(`could not load ${input}${why}`);
+        out.error(`could not load ${input}: ${failure || `HTTP ${lp.status}`}`);
         return 1;
       }
       const pdf = await lp.page.pdf({

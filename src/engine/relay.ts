@@ -59,12 +59,18 @@ const NEXT_ADDRESS = new Set(['ECONNREFUSED', 'EHOSTUNREACH', 'ENETUNREACH', 'EA
 
 export interface Relay {
   url: string; // for --proxy-server
-  blocked: string[]; // hosts refused, for the messages
+  // Why it could not reach a host, for the messages: BlockedAddress, or the
+  // error of its lookup or connection. Chromium only sees a 403, a 502 or
+  // a closed connection.
+  failure(host: string): Error | undefined;
   close(): Promise<void>;
 }
 
 export async function startRelay(): Promise<Relay> {
-  const blocked: string[] = [];
+  // By host, an IPv6 address without its brackets.
+  const failures = new Map<string, Error>();
+  const bare = (host: string) => host.replace(/^\[|\]$/g, '');
+  const failed = (host: string, e: unknown) => failures.set(bare(host), e as Error);
   const sockets = new Set<Socket>();
   const server: Server = createServer(async (req, res) => {
     // A plain HTTP request, with an absolute URL.
@@ -90,10 +96,13 @@ export async function startRelay(): Promise<Relay> {
         res.writeHead(r.statusCode ?? 502, r.headers);
         r.pipe(res);
       });
-      up.on('error', () => res.destroy());
+      up.on('error', (e) => {
+        if (!res.headersSent) failed(target.hostname, e);
+        res.destroy();
+      });
       req.pipe(up);
     } catch (e) {
-      if (e instanceof BlockedAddress) blocked.push(target.hostname);
+      failed(target.hostname, e);
       res.writeHead(e instanceof BlockedAddress ? 403 : 502).end();
     }
   });
@@ -106,16 +115,21 @@ export async function startRelay(): Promise<Relay> {
     const [host, port] = splitHostPort(req.url ?? '');
     try {
       const addr = await checkedAddress(host, true);
+      let open = false;
       const up = connect({ host: addr.address, port: Number(port) || 443 }, () => {
+        open = true;
         client.write('HTTP/1.1 200 Connection Established\r\n\r\n');
         up.write(head);
         up.pipe(client);
         client.pipe(up);
       });
-      up.on('error', () => client.destroy());
+      up.on('error', (e) => {
+        if (!open) failed(host, e);
+        client.destroy();
+      });
       client.on('error', () => up.destroy());
     } catch (e) {
-      if (e instanceof BlockedAddress) blocked.push(host);
+      failed(host, e);
       client.end(`HTTP/1.1 ${e instanceof BlockedAddress ? 403 : 502} Refused\r\n\r\n`);
     }
   });
@@ -123,7 +137,7 @@ export async function startRelay(): Promise<Relay> {
   const { port } = server.address() as AddressInfo;
   return {
     url: `http://127.0.0.1:${port}`,
-    blocked,
+    failure: (host) => failures.get(bare(host)),
     close: () => new Promise<void>((ok) => {
       for (const s of sockets) s.destroy();
       server.close(() => ok());

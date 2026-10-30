@@ -1,9 +1,10 @@
 // Loads one page in Chromium the way wkhtmltopdf 0.12.6 loads it
 // (src/lib/multipageloader.cc): its network rules, its waits, its messages
-// and its error codes. Every request goes through the DevTools Fetch
-// domain: local files are checked and served from here, style sheets are
-// rewritten for the emulations, fonts get the CORS header WebKit did not
-// need.
+// and its error codes; the native interface takes the failures instead of
+// the messages (Reporter.failed). Every request goes through the DevTools
+// Fetch domain: local files are checked and served from here, style sheets
+// are rewritten for the emulations, fonts get the CORS header WebKit did
+// not need.
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { basename, extname } from 'node:path';
@@ -17,7 +18,16 @@ import { BlockedAddress, relayGet, relayRequest, type ClientCert } from './relay
 export interface Reporter {
   warning(message: string): void;
   error(message: string): void;
+  // Given, a request that does not load comes here, and none of
+  // wkhtmltopdf's messages about it: the native interface words it. page:
+  // the page itself, not one of its resources.
+  failed?(url: string, why: Failure, page: boolean): void;
 }
+
+// Why a request did not load: its HTTP status, the network error as
+// Chromium names it (net::ERR_…), or the error of a request made here
+// (fonts: BlockedAddress, the system's error).
+export type Failure = number | string | Error;
 
 export interface LoadSpec {
   url: string;
@@ -113,7 +123,12 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
   if (own) access.allow(own);
 
   // amfinished: the last error of a page that is not a media file wins.
-  const fail = (url: string, ns: number, hs: number, errorString: string) => {
+  const fail = (url: string, ns: number, hs: number, errorString: string, why: Failure, page = false) => {
+    if (out.failed) {
+      // A resource canceled without an HTTP error did not fail.
+      if (page || ns !== 5 || hs > 399) out.failed(url, why, page);
+      return;
+    }
     if (!((ns !== 0 && ns !== 5) || (hs > 399 && lp.errorCode === 0))) return;
     const code = ns > 0 ? ns + 1000 : hs;
     if (!MEDIA.has(completeSuffix(url))) {
@@ -146,14 +161,14 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
     if (!mainDocument && e.type === 'Document') mainDocument = e.requestId;
   });
   cdp.on('Network.loadingFinished', (e: { requestId: string }) => inflight.delete(e.requestId));
-  const httpError = (url: string, status: number, statusText: string) => {
+  const httpError = (url: string, status: number, statusText: string, page = false) => {
     const ns = qtErrorForHttpStatus(status);
-    fail(url, ns, status, qtErrorString(ns, url, status, statusText || httpReason(status)));
+    fail(url, ns, status, qtErrorString(ns, url, status, statusText || httpReason(status)), status, page);
   };
   cdp.on('Network.responseReceived', (e: { requestId: string; response: { url: string; status: number; statusText: string } }) => {
     const { url, status, statusText } = e.response;
     if (!/^https?:/.test(url) || status < 400 || answered.has(e.requestId) || reports.has(e.requestId)) return;
-    httpError(url, status, statusText);
+    httpError(url, status, statusText, e.requestId === mainDocument);
   });
   // A response Chromium keeps from the page gets no responseReceived: its
   // status comes from the network service, before or after the failure.
@@ -173,7 +188,7 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
     if (!/^https?:/.test(url) || answered.has(e.requestId) || reports.has(e.requestId) || e.errorText === 'net::ERR_BLOCKED_BY_CLIENT') return;
     if (e.blockedReason || e.corsErrorStatus || e.errorText === 'net::ERR_BLOCKED_BY_ORB') {
       const read = (status: number) => {
-        if (e.corsErrorStatus) fail(url, 5, status, qtErrorString(5, url, status, ''));
+        if (e.corsErrorStatus) fail(url, 5, status, qtErrorString(5, url, status, ''), status);
         else if (status >= 400) httpError(url, status, '');
       };
       const status = statuses.get(e.requestId);
@@ -182,9 +197,10 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
       return;
     }
     const ns = e.canceled ? 5 : qtErrorForChromium(e.errorText);
+    const page = e.requestId === mainDocument;
     // Qt never reported a refused connection on the page itself.
-    if (e.requestId === mainDocument && ns === 1) return;
-    fail(url, ns, 0, qtErrorString(ns, url, 0, ''));
+    if (page && ns === 1 && !out.failed) return;
+    fail(url, ns, 0, qtErrorString(ns, url, 0, ''), e.errorText, page);
   });
 
   // Fetch: every request, and style sheet responses to rewrite.
@@ -247,14 +263,17 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
     const { requestId, request } = e;
     const path = filePath(request.url.split('#')[0]!);
     if (!path || !access.allows(path)) {
-      // wkhtmltopdf loads about:blank instead, which Qt cannot load.
-      out.warning(`Blocked access to file ${(path && canonical(path)) ?? ''}`);
-      fail('about:blank', 301, 0, 'Protocol "about" is unknown');
+      if (out.failed) out.failed(request.url, 'net::ERR_ACCESS_DENIED', false);
+      else {
+        // wkhtmltopdf loads about:blank instead, which Qt cannot load.
+        out.warning(`Blocked access to file ${(path && canonical(path)) ?? ''}`);
+        fail('about:blank', 301, 0, 'Protocol "about" is unknown', '');
+      }
       return cdp.send('Fetch.failRequest', { requestId, errorReason: 'AccessDenied' });
     }
     const data = await readLocal(path);
     if (!data) {
-      fail(request.url, 203, 0, `Error opening ${path}: No such file or directory`);
+      fail(request.url, 203, 0, `Error opening ${path}: No such file or directory`, 'net::ERR_FILE_NOT_FOUND', e.resourceType === 'Document' && path === own);
       return cdp.send('Fetch.failRequest', { requestId, errorReason: 'Failed' });
     }
     let body = data;
@@ -292,7 +311,7 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
       const responseHeaders = r.headers
         .filter(([k]) => !/^(content-encoding|content-length|transfer-encoding|connection|keep-alive)$/i.test(k))
         .map(([name, value]) => ({ name, value }));
-      if (r.status >= 400 && !isReport(e.resourceType)) fail(request.url, qtErrorForHttpStatus(r.status), r.status, qtErrorString(qtErrorForHttpStatus(r.status), request.url, r.status, r.statusText));
+      if (r.status >= 400 && !isReport(e.resourceType)) fail(request.url, qtErrorForHttpStatus(r.status), r.status, qtErrorString(qtErrorForHttpStatus(r.status), request.url, r.status, r.statusText), r.status);
       let data = r.body;
       if (rewrite && e.resourceType === 'Stylesheet' && r.status < 300) data = Buffer.from(rewriteCss(data.toString('utf8'), rewrite));
       if (e.resourceType === 'Font') responseHeaders.push({ name: 'Access-Control-Allow-Origin', value: '*' });
@@ -302,7 +321,7 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
       // proxy's refusal for a blocked address, the handshake.
       const code = (err as { code?: string }).code;
       const ns = code === 'ENOTFOUND' ? 3 : code === 'ECONNREFUSED' ? 1 : code === 'ECONNRESET' ? 2 : err instanceof BlockedAddress ? 102 : 6;
-      if (!isReport(e.resourceType)) fail(request.url, ns, 0, qtErrorString(ns, request.url, 0, ''));
+      if (!isReport(e.resourceType)) fail(request.url, ns, 0, qtErrorString(ns, request.url, 0, ''), err as Error);
       await cdp.send('Fetch.failRequest', { requestId, errorReason: 'Failed' });
     }
   };
@@ -316,11 +335,11 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
         .filter(([k]) => !/^(access-control-allow-origin|content-encoding|content-length|transfer-encoding|connection)$/i.test(k))
         .map(([name, value]) => ({ name, value }));
       headers.push({ name: 'Access-Control-Allow-Origin', value: '*' });
-      if (r.status >= 400) fail(request.url, qtErrorForHttpStatus(r.status), r.status, qtErrorString(qtErrorForHttpStatus(r.status), request.url, r.status, r.statusText));
+      if (r.status >= 400) fail(request.url, qtErrorForHttpStatus(r.status), r.status, qtErrorString(qtErrorForHttpStatus(r.status), request.url, r.status, r.statusText), r.status);
       await cdp.send('Fetch.fulfillRequest', { requestId, responseCode: r.status, responseHeaders: headers, body: r.body.toString('base64') });
     } catch (err) {
       const ns = (err as { code?: string }).code === 'ENOTFOUND' ? 3 : 99;
-      fail(request.url, ns, 0, qtErrorString(ns, request.url, 0, ''));
+      fail(request.url, ns, 0, qtErrorString(ns, request.url, 0, ''), err as Error);
       await cdp.send('Fetch.failRequest', { requestId, errorReason: 'Failed' });
     }
   };
@@ -333,7 +352,8 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
     const password = proxy ? load.proxy?.password ?? '' : load.password;
     let response: 'ProvideCredentials' | 'CancelAuth' = 'ProvideCredentials';
     if (!user) {
-      out.error(proxy ? 'Proxy Authentication Required' : 'Authentication Required');
+      // The native interface reports the 401 as the request's failure.
+      if (!out.failed) out.error(proxy ? 'Proxy Authentication Required' : 'Authentication Required');
       response = 'CancelAuth';
     } else if (loginTry >= 2) {
       out.error('Invalid username or password');
@@ -414,10 +434,14 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
   // Load, then run-script, then window-status, then the delay.
   try {
     lp.status = (await page.goto(spec.url, { waitUntil: 'load', timeout: 0 }))?.status() ?? 0;
-  } catch {
+  } catch (e) {
     lp.ok = false;
+    // After the request's own failure, when it had one.
+    const message = e instanceof Error ? e.message : String(e);
+    out.failed?.(spec.url, /net::ERR_\w+/.exec(message)?.[0] ?? message, true);
   }
   if (!lp.ok) {
+    if (out.failed) return lp;
     if (load.loadErrorHandling === 'abort') {
       out.error(`Failed loading page ${spec.url} (sometimes it will work just to ignore this error with --load-error-handling ignore)`);
     } else if (load.loadErrorHandling === 'skip') {

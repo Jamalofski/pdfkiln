@@ -9,11 +9,12 @@ import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
-import type { AddressInfo } from 'node:net';
+import { createServer as createTcpServer, type AddressInfo } from 'node:net';
 import type { TLSSocket } from 'node:tls';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { after, before, describe, test } from 'node:test';
+import { pathToFileURL } from 'node:url';
 import { PDFDocument, PDFName } from '@cantoo/pdf-lib';
 
 const root = resolve(import.meta.dirname, '..', '..');
@@ -100,6 +101,14 @@ before(async () => {
     // The same, in 404: HTML for an image, a request without CORS headers.
     if (path === '/withheld404') return html(`<img src="${other}/404">`);
     if (path === '/cors404') return html(`<script>const x = new XMLHttpRequest(); x.open('GET', '${other}/404'); x.send();</script>`);
+    // A page whose resources the last line answers in 404, and a page that
+    // asks for a password.
+    if (path === '/resources') {
+      return html(`<style>@font-face { font-family: F; src: url(/font) } p { font-family: F }</style><p>resources</p>
+        <img src="/image"><img src="/image.png"><link rel="stylesheet" href="/style.css"><iframe src="/frame"></iframe>
+        <script>const x = new XMLHttpRequest(); x.open('GET', '/data'); x.send();</script>`);
+    }
+    if (path === '/auth') return res.writeHead(401, { 'content-type': 'text/html', 'www-authenticate': 'Basic realm="pdfkiln"' }).end('<p>auth</p>');
     if (path === '/headers') return html(`<p>X-Test=${req.headers['x-test'] ?? 'none'}</p><img src="/img">`);
     if (path === '/img') imgHeader = String(req.headers['x-test'] ?? 'none');
     if (path === '/img') return res.writeHead(200, { 'content-type': 'image/svg+xml' }).end(`<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><text y="10">${req.headers['x-test'] ?? 'none'}</text></svg>`);
@@ -526,8 +535,10 @@ describe('security', () => {
 
   test('--kiln-block-private-network refuses loopback, by address and by name', async () => {
     for (const url of [`${base}/ok`, base.replace('127.0.0.1', 'localhost') + '/ok']) {
-      const r = await run(['-q', '--kiln-block-private-network', url, join(dir, 'p.pdf')]);
+      const r = await run(['--log-level', 'warn', '--kiln-block-private-network', url, join(dir, 'p.pdf')]);
       assert.equal(r.code, 1, url);
+      // The relay's refusal is a 403, worded as wkhtmltopdf words one.
+      assert.equal(r.stderr, `Error: Failed to load ${url}, with network status code 202 and http status code 403 - Error downloading ${url} - server replied: Forbidden\nExit with code 1 due to network error: ContentOperationNotPermittedError\n`);
     }
     const r = await run(['-q', `${base}/ok`, join(dir, 'p.pdf')]);
     assert.equal(r.code, 0);
@@ -638,13 +649,12 @@ describe('native interface', () => {
   test('private addresses are refused by default: such an input fails, without PDF', async () => {
     const out = join(dir, 'native-private.pdf');
     // --block-private-network, the default, stays for conv2pdf.
-    for (const [flags, url, host] of [[[], `${base}/ok`, '127.0.0.1'], [[], `${other}/ok`, 'localhost'], [['--block-private-network'], `${base}/ok`, '127.0.0.1']] as const) {
+    // An address is private, a name resolves to one.
+    for (const [flags, url, host] of [[[], `${base}/ok`, '127.0.0.1 is'], [[], `${other}/ok`, 'localhost resolves to'], [['--block-private-network'], `${base}/ok`, '127.0.0.1 is']] as const) {
       const r = await native([...flags, url, out]);
       assert.equal(r.code, 1, r.stderr);
       assert.ok(!existsSync(out), 'no PDF');
-      // conv2pdf tells a refusal by the first line.
-      assert.match(r.stderr, /^pdfkiln: error: Failed to load \S+, with network status code 202 and http status code 403 /);
-      assert.equal(lastLine(r.stderr), `pdfkiln: error: could not load ${url}: ${host} is a private address (--allow-private-network to reach it)`);
+      assert.equal(r.stderr, `pdfkiln: error: could not load ${url}: ${host} a private address (--allow-private-network to reach it)\n`);
     }
     const r = await native(['--allow-private-network', `${base}/ok`, out]);
     assert.equal(r.code, 0, r.stderr);
@@ -656,7 +666,91 @@ describe('native interface', () => {
     const r = await native(['--allow-private-network', `${base}/404`, out]);
     assert.equal(r.code, 1);
     assert.ok(!existsSync(out), 'no PDF');
-    assert.equal(lastLine(r.stderr), `pdfkiln: error: could not load ${base}/404: HTTP 404`);
+    assert.equal(r.stderr, `pdfkiln: error: could not load ${base}/404: HTTP 404\n`);
+  });
+
+  test('an input that does not load: one error, that says why', async () => {
+    const out = join(dir, 'native-unreachable.pdf');
+    // A port nothing listens on, and a server that closes the connection
+    // without an answer.
+    const closed = await new Promise<number>((ok) => {
+      const s = createServer().listen(0, '127.0.0.1', () => {
+        const { port } = s.address() as AddressInfo;
+        s.close(() => ok(port));
+      });
+    });
+    const closing = createTcpServer((socket) => socket.once('data', () => socket.end()));
+    await new Promise<void>((ok) => closing.listen(0, '127.0.0.1', ok));
+    try {
+      for (const [args, why] of [
+        // The relay's 502 and closed tunnels, named.
+        [['http://pdfkiln-nonexistent.invalid/'], 'host not found'],
+        [['https://pdfkiln-nonexistent.invalid/'], 'host not found'],
+        [[`https://127.0.0.1:${closed}/`], '127.0.0.1 is a private address (--allow-private-network to reach it)'],
+        // Chromium's own errors, without the relay; a refused connection on
+        // the page itself too.
+        [['--allow-private-network', 'http://pdfkiln-nonexistent.invalid/'], 'host not found'],
+        [['--allow-private-network', `http://127.0.0.1:${closed}/`], 'connection refused'],
+        [['--allow-private-network', `http://127.0.0.1:${(closing.address() as AddressInfo).port}/`], 'connection closed'],
+        // No "Authentication Required": the status says it.
+        [['--allow-private-network', `${base}/auth`], 'HTTP 401'],
+      ] as const) {
+        const r = await native([...args, out]);
+        assert.equal(r.code, 1, r.stderr);
+        assert.equal(r.stderr, `pdfkiln: error: could not load ${args.at(-1)}: ${why}\n`);
+        assert.ok(!existsSync(out), 'no PDF');
+      }
+    } finally {
+      closing.close();
+    }
+  });
+
+  test('a certificate that Chromium refuses is named', async (t) => {
+    const d = join(dir, 'native-tls');
+    mkdirSync(d, { recursive: true });
+    try {
+      execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', 'k.pem', '-out', 'c.pem', '-days', '2', '-subj', '/CN=localhost'], { cwd: d, stdio: 'ignore' });
+    } catch {
+      return t.skip('openssl missing');
+    }
+    const tls = createHttpsServer({ key: readFileSync(join(d, 'k.pem')), cert: readFileSync(join(d, 'c.pem')) }, (_, res) => res.end('<p>tls</p>'));
+    await new Promise<void>((ok) => tls.listen(0, '127.0.0.1', ok));
+    try {
+      const url = `https://127.0.0.1:${(tls.address() as AddressInfo).port}/`;
+      const r = await native(['--allow-private-network', url, join(dir, 'native-tls.pdf')]);
+      assert.equal(r.code, 1);
+      assert.match(r.stderr, new RegExp(`^pdfkiln: error: could not load ${url}: invalid certificate \\(net::ERR_CERT_[A-Z_]+\\)\\n$`));
+    } finally {
+      tls.close();
+    }
+  });
+
+  test('a resource that does not load is a warning, which says why; -q hides it', async () => {
+    const out = join(dir, 'native-resources.pdf');
+    let r = await native(['--allow-private-network', `${base}/resources`, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.ok(existsSync(out));
+    // Media for wkhtmltopdf or not: a font, images with and without an
+    // extension, a style sheet, a frame, a request of a script.
+    assert.deepEqual(r.stderr.trim().split(/\r?\n/).sort(),
+      ['data', 'font', 'frame', 'image', 'image.png', 'style.css'].map((p) => `pdfkiln: warning: could not load ${base}/${p}: HTTP 404`).sort());
+    r = await native(['-q', '--allow-private-network', `${base}/resources`, out]);
+    assert.equal(r.code, 0);
+    assert.equal(r.stderr, '');
+  });
+
+  test('local files: one not allowed, one missing, a warning each', async () => {
+    file('native/files/neighbour.png', 'png');
+    const page = file('native/files/page.html', '<p>files</p><img src="neighbour.png"><img src="missing.png">');
+    const out = join(dir, 'native-files.pdf');
+    const url = (name: string) => pathToFileURL(join(dir, 'native', 'files', name)).href;
+    const refused = 'not an allowed file (--allow <path> or --enable-local-file-access to read it)';
+    let r = await native([page, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.deepEqual(r.stderr.trim().split(/\r?\n/).sort(), [`pdfkiln: warning: could not load ${url('missing.png')}: ${refused}`, `pdfkiln: warning: could not load ${url('neighbour.png')}: ${refused}`]);
+    r = await native(['--allow', join(dir, 'native', 'files'), page, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.equal(r.stderr, `pdfkiln: warning: could not load ${url('missing.png')}: no such file\n`);
   });
 
   test('pdfkiln wkhtmltopdf switches to the compatible mode', async () => {
@@ -664,10 +758,19 @@ describe('native interface', () => {
     assert.match(r.stdout.toString(), /^wkhtmltopdf 0\.12\.6/);
   });
 
-  test('a missing input', async () => {
-    const r = await native([join(dir, 'missing.html'), join(dir, 'm.pdf')]);
+  test('an input is a file unless it is a URL: a missing one is not looked for on the web', async () => {
+    let r = await native(['missing.html', join(dir, 'm.pdf')]);
     assert.equal(r.code, 1);
-    assert.match(r.stderr, /pdfkiln: error/);
+    assert.equal(r.stderr, 'pdfkiln: error: could not load missing.html: no such file\n');
+    // One named like a host was meant as a URL.
+    for (const host of ['www.example.com', '10.0.0.5']) {
+      r = await native([host, join(dir, 'm.pdf')]);
+      assert.equal(r.code, 1);
+      assert.equal(r.stderr, `pdfkiln: error: could not load ${host}: no such file (a URL starts with https://)\n`);
+    }
+    r = await native([dir, join(dir, 'm.pdf')]);
+    assert.equal(r.code, 1);
+    assert.equal(r.stderr, `pdfkiln: error: could not load ${dir}: not a file\n`);
   });
 });
 
