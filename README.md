@@ -14,7 +14,7 @@ wkhtmltopdf is archived: its last release, 0.12.6, dates from June 2020, on a Qt
 pdfkiln is one program that answers to two names:
 
 - called as `wkhtmltopdf` (or `pdfkiln wkhtmltopdf ...`), it accepts the command line of wkhtmltopdf 0.12.6, so existing integrations keep working unchanged;
-- called as `pdfkiln`, it offers its own interface, with modern print defaults: print media, paper size, margins, headers and footers from the page's CSS (`@page` and its margin boxes).
+- called as `pdfkiln`, it offers its own interface, with modern print defaults: print media, paper size, margins, headers and footers from the page's CSS (`@page` and its margin boxes). This interface is young: unlike the wkhtmltopdf command line, it may change in a minor version, as in 1.1.0, and the version's notes (`CHANGELOG.md`) say so first.
 
 pdfkiln is not affiliated with the original wkhtmltopdf project.
 
