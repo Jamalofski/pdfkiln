@@ -74,6 +74,8 @@ let other = '';
 let hangs: (() => void)[] = [];
 // X-Test as the last /img request carried it.
 let imgHeader = '';
+// And its Cookie.
+let imgCookie = '';
 before(async () => {
   server = createServer((req, res) => {
     const path = (req.url ?? '/').split('?')[0];
@@ -111,6 +113,8 @@ before(async () => {
     if (path === '/auth') return res.writeHead(401, { 'content-type': 'text/html', 'www-authenticate': 'Basic realm="pdfkiln"' }).end('<p>auth</p>');
     if (path === '/headers') return html(`<p>X-Test=${req.headers['x-test'] ?? 'none'}</p><img src="/img">`);
     if (path === '/img') imgHeader = String(req.headers['x-test'] ?? 'none');
+    if (path === '/img') imgCookie = String(req.headers.cookie ?? 'none');
+    if (path === '/third-party') return html(`<img src="${other}/img">`);
     if (path === '/img') return res.writeHead(200, { 'content-type': 'image/svg+xml' }).end(`<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><text y="10">${req.headers['x-test'] ?? 'none'}</text></svg>`);
     if (path === '/hang') {
       hangs.push(() => res.end());
@@ -587,6 +591,13 @@ describe('native interface', () => {
     child.on('close', (code) => ok({ code, stdout: Buffer.concat(out), stderr: err, ms: performance.now() - t0 }));
     child.stdin.end(stdin);
   });
+  // The first page's paper: A4 (Chromium's default comes out at 595.9 pt
+  // wide), A5 landscape, or its size in points.
+  const paper = async (f: string) => {
+    const { width, height } = (await PDFDocument.load(readFileSync(f), { updateMetadata: false })).getPage(0).getSize();
+    const near = (w: number, h: number) => Math.abs(width - w) < 1.5 && Math.abs(height - h) < 1.5;
+    return near(595.3, 841.9) ? 'A4' : near(595.3, 419.5) ? 'A5 landscape' : `${width} x ${height}`;
+  };
 
   test('@page gives the size; print media', async () => {
     const page = file('native/a5.html', '<style>@page { size: A5 landscape; margin: 0 } @media screen { p { display: none } }</style><p>printed</p>');
@@ -750,6 +761,61 @@ describe('native interface', () => {
     r = await native(['--allow', join(dir, 'native', 'files'), page, out]);
     assert.equal(r.code, 0, r.stderr);
     assert.equal(r.stderr, `pdfkiln: warning: could not load ${url('missing.png')}: no such file\n`);
+  });
+
+  test('--header and --cookie go with the requests to the input\'s host, and no other', async () => {
+    const out = join(dir, 'native-site.pdf');
+    const send = ['--allow-private-network', '--header', 'X-Test: yes', '--cookie', 'session=abc'];
+    let r = await native([...send, `${base}/headers`, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.deepEqual([imgHeader, imgCookie], ['yes', 'session=abc']);
+    // An image of another host.
+    r = await native([...send, `${base}/third-party`, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.deepEqual([imgHeader, imgCookie], ['none', 'none']);
+    for (const [flag, value, message] of [['--header', 'no colon', '"name: value"'], ['--cookie', 'nameonly', 'name=value']]) {
+      r = await native([flag!, value!, `${base}/ok`, out]);
+      assert.equal(r.code, 1);
+      assert.equal(r.stderr, `pdfkiln: ${flag} takes ${message}, not ${value}\n`);
+    }
+  });
+
+  test('--wait-for waits for an element, whatever the delay', async () => {
+    // The element comes with a rule that turns the page to A5 landscape.
+    const page = file('native/late.html', `<p>start</p><script>
+      setTimeout(() => document.body.insertAdjacentHTML('beforeend', '<p id="ready">ready</p><style>@page { size: A5 landscape }</style>'), 1500);
+    </script>`);
+    const out = join(dir, 'native-late.pdf');
+    let r = await native(['--javascript-delay', '200', page, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.equal(await paper(out), 'A4');
+    r = await native(['--javascript-delay', '200', '--wait-for', '#ready', page, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.equal(await paper(out), 'A5 landscape');
+    r = await native(['--wait-for', '###', page, out]);
+    assert.equal(r.code, 1);
+    assert.equal(r.stderr, 'pdfkiln: error: --wait-for takes a CSS selector, not ###\n');
+  });
+
+  test('--css comes after the page\'s own rules; --media screen leaves its print rules out', async () => {
+    const out = join(dir, 'native-css.pdf');
+    const css = file('native/a5.css', '@page { size: A5 landscape }');
+    let r = await native(['--css', css, file('native/a4.html', '<style>@page { size: A4 }</style><p>A4 by the page</p>'), out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.equal(await paper(out), 'A5 landscape');
+    const printOnly = file('native/print-a5.html', '<style>@media print { @page { size: A5 landscape } }</style><p>A5 in print</p>');
+    r = await native([printOnly, out]);
+    assert.equal(await paper(out), 'A5 landscape');
+    r = await native(['--media', 'screen', printOnly, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.equal(await paper(out), 'A4');
+    r = await native(['--media', 'tv', printOnly, out]);
+    assert.equal(r.code, 1);
+    assert.equal(r.stderr, 'pdfkiln: --media takes print or screen\n');
+    const missing = join(dir, 'missing.css');
+    r = await native(['--css', missing, printOnly, out]);
+    assert.equal(r.code, 1);
+    assert.equal(r.stderr, `pdfkiln: --css: cannot read ${missing}\n`);
   });
 
   test('pdfkiln wkhtmltopdf switches to the compatible mode', async () => {

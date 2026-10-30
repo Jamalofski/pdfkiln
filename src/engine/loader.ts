@@ -45,6 +45,12 @@ export interface LoadSpec {
   fontFamily?: string;
   blockPrivateNetwork: boolean;
   userStyleSheet?: string; // CSS text
+  // The native interface's own: headers for every request to the page's
+  // host and no other, a style sheet after the page's own, which it
+  // overrides, and an element to wait for before the delay.
+  siteHeaders?: [string, string][];
+  css?: string;
+  waitFor?: string;
 }
 
 // Media files: their load errors follow --load-media-error-handling.
@@ -251,10 +257,18 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
         postData = post.body;
       }
     }
+    // The native --header: with every request to the page's host, in place
+    // of the browser's own of the same name, and to no other host.
+    const site = Boolean(spec.siteHeaders?.length) && URL.parse(url)?.hostname === URL.parse(spec.url)?.hostname;
+    if (site) {
+      const names = new Set(spec.siteHeaders!.map(([name]) => name.toLowerCase()));
+      headers = (headers ?? Object.entries(request.headers).map(([name, value]) => ({ name, value }))).filter((h) => !names.has(h.name.toLowerCase()));
+      for (const [name, value] of spec.siteHeaders!) headers.push({ name, value });
+    }
     // Chromium cannot be given a client certificate: the command makes
     // the request.
     if (clientCert && url.startsWith('https:')) return relayTls(e, headers, postData);
-    if (main) return cdp.send('Fetch.continueRequest', { requestId, headers, ...(postData ? { method: 'POST', postData: postData.toString('base64') } : {}) });
+    if (main || site) return cdp.send('Fetch.continueRequest', { requestId, headers, ...(postData ? { method: 'POST', postData: postData.toString('base64') } : {}) });
     if (rewrite && e.resourceType === 'Stylesheet') return cdp.send('Fetch.continueRequest', { requestId, interceptResponse: true });
     return cdp.send('Fetch.continueRequest', { requestId });
   };
@@ -458,6 +472,29 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
       s.textContent = css;
       (document.head ?? document.documentElement).prepend(s);
     }, spec.userStyleSheet!).catch(() => {})));
+  }
+  // The native --css: last in the page, it wins over the page's own rules
+  // (@page included).
+  if (spec.css) {
+    await page.evaluate((css: string) => {
+      const s = document.createElement('style');
+      s.textContent = css;
+      document.documentElement.append(s);
+    }, spec.css).catch(() => {});
+  }
+  // The native --wait-for, whatever the delay; --timeout bounds it.
+  // Puppeteer waits on an invalid selector as on any other: checked first.
+  if (spec.waitFor) {
+    const valid = await page.evaluate((selector: string) => {
+      try {
+        document.querySelector(selector);
+        return true;
+      } catch {
+        return false;
+      }
+    }, spec.waitFor).catch(() => true);
+    if (!valid) throw new Error(`--wait-for takes a CSS selector, not ${spec.waitFor}`);
+    await Promise.race([page.waitForSelector(spec.waitFor, { timeout: 0 }), printCalled]).catch(() => {});
   }
   if (spec.isMain) {
     for (const js of load.runScript) {

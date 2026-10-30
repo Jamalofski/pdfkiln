@@ -5,6 +5,10 @@
 //   output;
 // - print media; paper size and margins from the page's @page rule (A4 and
 //   1 cm otherwise), headers and footers from its @page margin boxes;
+//   --css adds a style sheet after the page's own, --media screen renders
+//   it as on screen;
+// - --header and --cookie go with the requests to the input's host, and
+//   to no other; --wait-for waits for an element before the delay;
 // - --tagged keeps the structure tree; --outline adds bookmarks;
 // - the JavaScript delay of the compatible mode, cut short once nothing
 //   can change the page, 1000 ms at most by default;
@@ -40,9 +44,17 @@ and footers come from the page's CSS (@page and its margin boxes); A4 with
 Options:
   --tagged                  Tagged PDF, readable by screen readers (one input)
   --outline                 Bookmarks from the headings
+  --css <file>              Apply this style sheet after the page's own
+  --media <type>            CSS media type: print (default) or screen
   --javascript-delay <ms>   Wait up to this long after loading (default 1000,
                             0: none), less once nothing can change the page
-  --allow <path>            Let local pages read files under this path (repeatable)
+  --wait-for <selector>     Wait for an element that matches this CSS selector,
+                            then for --javascript-delay; --timeout bounds it
+  --header <name: value>    Send this HTTP header with every request to the
+                            input's host, no other (repeatable)
+  --cookie <name=value>     Send this cookie to the input's host (repeatable)
+  --allow <path>            Let local pages read files under this path
+                            (repeatable)
   --enable-local-file-access  Let local pages read any local file
   --allow-private-network   Let pages reach loopback, private and link-local
                             addresses, refused by default
@@ -126,7 +138,12 @@ export async function nativeMain(args: string[]): Promise<number> {
       options: {
         tagged: { type: 'boolean' },
         outline: { type: 'boolean' },
+        css: { type: 'string' },
+        media: { type: 'string' },
         'javascript-delay': { type: 'string' },
+        'wait-for': { type: 'string' },
+        header: { type: 'string', multiple: true },
+        cookie: { type: 'string', multiple: true },
         allow: { type: 'string', multiple: true },
         'enable-local-file-access': { type: 'boolean' },
         'allow-private-network': { type: 'boolean' },
@@ -169,6 +186,38 @@ export async function nativeMain(args: string[]): Promise<number> {
   if (v.tagged && inputs.length > 1) {
     stderr('pdfkiln: --tagged takes one input: the structure trees of several documents are not merged yet\n');
     return 1;
+  }
+  const media = v.media ?? 'print';
+  if (media !== 'print' && media !== 'screen') {
+    stderr('pdfkiln: --media takes print or screen\n');
+    return 1;
+  }
+  let css: string | undefined;
+  if (v.css !== undefined) {
+    try {
+      css = readFileSync(v.css, 'utf8');
+    } catch {
+      stderr(`pdfkiln: --css: cannot read ${v.css}\n`);
+      return 1;
+    }
+  }
+  const headers: [string, string][] = [];
+  for (const h of v.header ?? []) {
+    const m = /^([!#$%&'*+.^`|~\w-]+):[ \t]*([^\r\n]*)$/.exec(h);
+    if (!m) {
+      stderr(`pdfkiln: --header takes "name: value", not ${h}\n`);
+      return 1;
+    }
+    headers.push([m[1]!, m[2]!.trimEnd()]);
+  }
+  const cookies: [string, string][] = [];
+  for (const c of v.cookie ?? []) {
+    const m = /^([^=;\s]+)=([^;\r\n]*)$/.exec(c);
+    if (!m) {
+      stderr(`pdfkiln: --cookie takes name=value, not ${c}\n`);
+      return 1;
+    }
+    cookies.push([m[1]!, m[2]!]);
   }
   const blockPrivate = !v['allow-private-network'];
 
@@ -217,6 +266,7 @@ export async function nativeMain(args: string[]): Promise<number> {
     base.load.jsdelay = jsdelay;
     base.load.blockLocalFileAccess = !v['enable-local-file-access'];
     base.load.allowed = v.allow ?? [];
+    base.load.cookies = cookies;
     let stdin: Buffer | undefined;
     const parts: { doc: PDFDocument; outline: OutlineItem[] }[] = [];
     for (const [i, input] of inputs.entries()) {
@@ -238,9 +288,12 @@ export async function nativeMain(args: string[]): Promise<number> {
         web: base.web,
         load: base.load,
         isMain: true,
-        media: 'print',
+        media,
         viewport: { width: 794, height: 1123 },
         blockPrivateNetwork: blockPrivate,
+        siteHeaders: headers,
+        css,
+        waitFor: v['wait-for'],
       }, out);
       // An input that does not load, or comes in HTTP error, fails: no PDF
       // of an error page.
@@ -276,6 +329,8 @@ export async function nativeMain(args: string[]): Promise<number> {
     else writeFileSync(output, bytes);
     return 0;
   } catch (e) {
+    // Cut off by --timeout, which says so itself.
+    if (session?.stopping) return 1;
     if (e instanceof LaunchError) {
       out.error(e.message);
       return 1;
