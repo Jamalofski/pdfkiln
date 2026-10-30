@@ -180,8 +180,8 @@ export async function nativeMain(args: string[]): Promise<number> {
         .map((it) => ({ title: it.title, dest: moveDest(merged.doc, it.dest!, merged.pages[merged.offsets[k]! + it.page]!), children: toFinal(it.children, k) }));
       writeOutline(merged.doc, parts.flatMap((p, k) => toFinal(p.outline, k)));
     }
-    merged.doc.setCreator(`pdfkiln ${version}`);
-    merged.doc.setProducer(`pdfkiln ${version}, Chromium ${chromiumVersion}`);
+    merged.doc.setCreator('pdfkiln');
+    merged.doc.setProducer('pdfkiln.org');
     const bytes = await merged.doc.save();
     if (output === '-') writeAll(1, bytes);
     else writeFileSync(output, bytes);

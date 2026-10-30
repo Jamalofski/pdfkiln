@@ -5,6 +5,10 @@ open with its section here (scripts/release.ts), after the Chromium it
 carries: no release without one. Up to 1.0.2, see each version's GitHub
 release.
 
+## 1.0.5
+
+- The PDFs no longer say which versions made them: Creator is `pdfkiln` and Producer `pdfkiln.org`, in every mode (wkhtmltopdf, native, `pdfkiln serve`). Up to 1.0.4, they gave the versions of pdfkiln and Chromium, which tell anyone who receives a PDF whether the server that made it still runs a Chromium with known flaws.
+
 ## 1.0.4
 
 - Security: Chromium 156.0.8078.80, with the 21 fixes of Chrome 156.0.8078.79, 1 of them rated Critical by Google (MediaStream) and 19 High: [Google's announcement](https://chromereleases.googleblog.com/2026/10/stable-channel-update-for-desktop_02107719452.html). pdfkiln renders the pages it is given with this Chromium: update.

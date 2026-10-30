@@ -133,9 +133,11 @@ describe('interface', () => {
     assert.equal(r.code, 0);
     const lines = r.stderr.split(/[\r\n]+/).filter((l) => l.trim() && !l.startsWith('[')).map((l) => l.trimEnd());
     assert.deepEqual(lines, ['Loading pages (1/6)', 'Counting pages (2/6)', 'Resolving links (4/6)', 'Loading headers and footers (5/6)', 'Printing pages (6/6)', 'Done']);
-    const doc = await PDFDocument.load(readFileSync(join(dir, 'ok.pdf')));
+    const doc = await PDFDocument.load(readFileSync(join(dir, 'ok.pdf')), { updateMetadata: false });
     assert.equal(doc.getTitle(), 'T');
     assert.ok(doc.catalog.get(PDFName.of('Outlines')), 'outline');
+    // No version: they would tell who receives the PDF which flaws the server has.
+    assert.deepEqual([doc.getCreator(), doc.getProducer()], ['pdfkiln', 'pdfkiln.org']);
   });
 
   test('a 404 page: the PDF, and exit 1 as wkhtmltopdf 0.12.6', async () => {
@@ -549,9 +551,10 @@ describe('native interface', () => {
     const out = join(dir, 'a5.pdf');
     const r = await native([page, out]);
     assert.equal(r.code, 0, r.stderr);
-    const doc = await PDFDocument.load(readFileSync(out));
+    const doc = await PDFDocument.load(readFileSync(out), { updateMetadata: false });
     const { width, height } = doc.getPage(0).getSize();
     assert.ok(Math.abs(width - 595.3) < 1 && Math.abs(height - 419.5) < 1, `${width} x ${height}`);
+    assert.deepEqual([doc.getCreator(), doc.getProducer()], ['pdfkiln', 'pdfkiln.org']);
   });
 
   test('standard input and output, several inputs merged', async () => {
