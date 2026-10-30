@@ -7,7 +7,10 @@
 // - --tagged keeps the structure tree; --outline adds bookmarks;
 // - the JavaScript delay of the compatible mode, cut short once nothing
 //   can change the page, 1000 ms at most by default;
-// - the security settings of the compatible mode, without prefix.
+// - secure by default: a page reads no local file but itself unless --allow
+//   or --enable-local-file-access, and reaches no loopback, private or
+//   link-local address unless --allow-private-network;
+// - an input that does not load fails: exit 1, no PDF.
 import { mkdtempSync, readFileSync, writeFileSync, writeSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -36,7 +39,8 @@ Options:
                             0: none), less once nothing can change the page
   --allow <path>            Let local pages read files under this path (repeatable)
   --enable-local-file-access  Let local pages read any local file
-  --block-private-network   Refuse loopback, private and link-local addresses
+  --allow-private-network   Let pages reach loopback, private and link-local
+                            addresses, refused by default
   --timeout <seconds>       Stop after this many seconds (default 120, 0: none)
   --no-sandbox              Run Chromium without its sandbox (not recommended)
   -q, --quiet               No warnings
@@ -70,6 +74,9 @@ export async function nativeMain(args: string[]): Promise<number> {
         'javascript-delay': { type: 'string' },
         allow: { type: 'string', multiple: true },
         'enable-local-file-access': { type: 'boolean' },
+        'allow-private-network': { type: 'boolean' },
+        // Deprecated, out of the help: the default now, kept for the calls
+        // that pass it (conv2pdf) until a future version removes it.
         'block-private-network': { type: 'boolean' },
         timeout: { type: 'string' },
         'no-sandbox': { type: 'boolean' },
@@ -111,6 +118,8 @@ export async function nativeMain(args: string[]): Promise<number> {
     stderr('pdfkiln: --tagged takes one input: the structure trees of several documents are not merged yet\n');
     return 1;
   }
+  // --block-private-network wins over --allow-private-network.
+  const blockPrivate = Boolean(v['block-private-network']) || !v['allow-private-network'];
 
   const out: Reporter = {
     warning: (m) => {
@@ -123,7 +132,7 @@ export async function nativeMain(args: string[]): Promise<number> {
   let relay: Relay | undefined;
   let stop = () => {};
   try {
-    if (v['block-private-network']) relay = await startRelay();
+    if (blockPrivate) relay = await startRelay();
     if (v['no-sandbox']) out.warning("Chromium's sandbox is off (--no-sandbox)");
     session = await launch({ dir: work, noSandbox: v['no-sandbox'], proxyServer: relay?.url, proxyBypassList: relay ? '<-loopback>' : undefined });
     stop = deadline(session, timeout, () => {
@@ -153,10 +162,15 @@ export async function nativeMain(args: string[]): Promise<number> {
         isMain: true,
         media: 'print',
         viewport: { width: 794, height: 1123 },
-        blockPrivateNetwork: Boolean(v['block-private-network']),
+        blockPrivateNetwork: blockPrivate,
       }, out);
-      if (!lp.ok) {
-        out.error(`could not load ${input}`);
+      // An input that does not load, or comes in HTTP error (403 for an
+      // address refused here), fails: no PDF of an error page.
+      if (!lp.ok || lp.status >= 400) {
+        const host = new URL(lp.ok ? lp.page.url() : url).hostname;
+        const why = relay?.blocked.includes(host) ? `: ${host} is a private address (--allow-private-network to reach it)`
+          : lp.ok ? `: HTTP ${lp.status}` : '';
+        out.error(`could not load ${input}${why}`);
         return 1;
       }
       const pdf = await lp.page.pdf({

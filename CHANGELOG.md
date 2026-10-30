@@ -5,10 +5,11 @@ open with its section here (scripts/release.ts), after the Chromium it
 carries: no release without one. Up to 1.0.2, see each version's GitHub
 release.
 
-## 1.0.5
+## 1.1.0
 
 - The PDFs no longer say which versions made them: Creator is `pdfkiln` and Producer `pdfkiln.org`, in every mode (wkhtmltopdf, native, `pdfkiln serve`). Up to 1.0.4, they gave the versions of pdfkiln and Chromium, which tell anyone who receives a PDF whether the server that made it still runs a Chromium with known flaws.
 - A page's CSP reports and beacons, and the responses Chromium keeps from it (HTML for an image, an API without CORS headers), no longer fail the conversion. On https://www.google.fr, whose CSP reports Chromium sends and wkhtmltopdf 0.12.6 did not, pdfkiln called as wkhtmltopdf exited 1 with "network status code 99", a failure for the libraries; called as pdfkiln, it printed an error. A response kept from the page with an HTTP error fails as with wkhtmltopdf: same message, same exit code.
+- Called as `pdfkiln`, private addresses are refused by default: pages reach no loopback, private or link-local address (cloud metadata `169.254.169.254` included) unless `--allow-private-network` is given, a local development server included. `--block-private-network`, now the default, is deprecated: it still works, out of the help, and will be removed in a future version. And an input that does not load, refused or in HTTP error, fails: exit 1 and no PDF, where 1.0.4 wrote a blank page and exited 0. Called as `wkhtmltopdf`, nothing changes.
 
 ## 1.0.4
 

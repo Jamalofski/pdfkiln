@@ -112,11 +112,13 @@ With the Debian package, `/usr/bin/wkhtmltopdf` is already in the `PATH`. Librar
 
 ## Security
 
-The defaults of wkhtmltopdf are kept, it is the compatibility contract: a page reads no local file but itself unless `--enable-local-file-access` or `--allow <path>` says so (neither `..` nor a symbolic link gets around `--allow`), and loads whatever it wants from the network. On top of them:
+Called as `wkhtmltopdf`, the defaults of wkhtmltopdf are kept, it is the compatibility contract: a page reads no local file but itself unless `--enable-local-file-access` or `--allow <path>` says so (neither `..` nor a symbolic link gets around `--allow`), and loads whatever it wants from the network. On top of them:
 
 - `--kiln-block-private-network`: no loopback, private or link-local address (cloud metadata `169.254.169.254` included), checked after DNS resolution;
 - `--kiln-timeout <seconds>`: the conversion and Chromium are stopped after 120 s by default;
 - Chromium's sandbox is on; `--kiln-no-sandbox` turns it off, not recommended.
+
+Called as `pdfkiln`, the defaults are secure: a page reads no local file but itself unless `--enable-local-file-access` or `--allow <path>` says so, and reaches no loopback, private or link-local address, checked after DNS resolution, unless `--allow-private-network` is given. An input that does not load, refused or in HTTP error, fails the conversion: exit 1, no PDF. The conversion stops after 120 s (`--timeout`), and Chromium's sandbox is on (`--no-sandbox`, not recommended).
 
 ## Compatibility and speed
 

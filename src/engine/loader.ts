@@ -63,6 +63,7 @@ export class LoadedPage {
   skipped = false;
   printRequested = false;
   title = '';
+  status = 0; // of the page itself, once loaded; 0 without one (data:)
   constructor(readonly page: Page, readonly cdp: CDPSession, readonly spec: LoadSpec) {}
 }
 
@@ -412,7 +413,7 @@ export async function openPage(context: BrowserContext, spec: LoadSpec, out: Rep
 
   // Load, then run-script, then window-status, then the delay.
   try {
-    await page.goto(spec.url, { waitUntil: 'load', timeout: 0 });
+    lp.status = (await page.goto(spec.url, { waitUntil: 'load', timeout: 0 }))?.status() ?? 0;
   } catch {
     lp.ok = false;
   }

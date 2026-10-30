@@ -630,9 +630,33 @@ describe('native interface', () => {
   });
 
   test('beacons, CSP reports and responses Chromium keeps from the page are not errors', async () => {
-    const r = await native([`${base}/extras`, join(dir, 'native-extras.pdf')]);
+    const r = await native(['--allow-private-network', `${base}/extras`, join(dir, 'native-extras.pdf')]);
     assert.equal(r.code, 0);
     assert.equal(r.stderr, '');
+  });
+
+  test('private addresses are refused by default: such an input fails, without PDF', async () => {
+    const out = join(dir, 'native-private.pdf');
+    // --block-private-network, the default, stays for conv2pdf.
+    for (const [flags, url, host] of [[[], `${base}/ok`, '127.0.0.1'], [[], `${other}/ok`, 'localhost'], [['--block-private-network'], `${base}/ok`, '127.0.0.1']] as const) {
+      const r = await native([...flags, url, out]);
+      assert.equal(r.code, 1, r.stderr);
+      assert.ok(!existsSync(out), 'no PDF');
+      // conv2pdf tells a refusal by the first line.
+      assert.match(r.stderr, /^pdfkiln: error: Failed to load \S+, with network status code 202 and http status code 403 /);
+      assert.equal(lastLine(r.stderr), `pdfkiln: error: could not load ${url}: ${host} is a private address (--allow-private-network to reach it)`);
+    }
+    const r = await native(['--allow-private-network', `${base}/ok`, out]);
+    assert.equal(r.code, 0, r.stderr);
+    assert.ok(existsSync(out));
+  });
+
+  test('an input in HTTP error fails, without PDF', async () => {
+    const out = join(dir, 'native-404.pdf');
+    const r = await native(['--allow-private-network', `${base}/404`, out]);
+    assert.equal(r.code, 1);
+    assert.ok(!existsSync(out), 'no PDF');
+    assert.equal(lastLine(r.stderr), `pdfkiln: error: could not load ${base}/404: HTTP 404`);
   });
 
   test('pdfkiln wkhtmltopdf switches to the compatible mode', async () => {
