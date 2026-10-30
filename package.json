@@ -1,6 +1,6 @@
 {
   "name": "pdfkiln",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "description": "Drop-in replacement for wkhtmltopdf, powered by Chromium",
   "license": "MIT",
